@@ -59,7 +59,7 @@
         "name": "Metabolic Interchange",
         "power_source": true,
         "toggled": true,
-        "description": "Your digestive system and power supply are interconnected.  Any drain on energy instead increases your hunger.  Can be toggled on and off at will."
+        "description": "Your digestive system and power supply are interconnected.  When this bionic is toggled on, your power level will recharge while making you more hungry.  A safety system will stop the interchange if your nutrition levels become too depleted."
     },{
         "type": "bionic",
         "id": "bio_solar",
