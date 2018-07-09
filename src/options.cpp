@@ -1275,6 +1275,12 @@ void options_manager::init()
 
     get_option("TILES").setPrerequisite("USE_TILES");
 
+    add( "TILES_FILTER_AMOUNT", "graphics", translate_marker( "Color filter amount" ),
+        translate_marker( "Controls the amount of color filter applied to shadows or when using light amplification." ),
+        0.0, 1.0, 1.0, 0.05, COPT_CURSES_HIDE);
+
+    get_option("TILES_FILTER_AMOUNT").setPrerequisite("USE_TILES");
+
     add( "PIXEL_MINIMAP", "graphics", translate_marker( "Pixel minimap" ),
         translate_marker( "If true, shows the pixel-detail minimap in game after the save is loaded.  Use the 'Toggle Pixel Minimap' action key to change its visibility during gameplay." ),
         true, COPT_CURSES_HIDE
@@ -1980,7 +1986,7 @@ std::string options_manager::show(bool ingame, const bool world_options_only)
             } else if( iter.first == "SIDEBAR_STYLE" ) {
                 sidebar_style_changed = true;
 
-            } else if ( iter.first == "TILES" || iter.first == "USE_TILES" ) {
+            } else if ( iter.first == "TILES" || iter.first == "USE_TILES" || iter.first == "TILES_FILTER_AMOUNT") {
                 used_tiles_changed = true;
 
             } else if ( iter.first == "USE_LANG" ) {

@@ -312,6 +312,7 @@ inline static void set_pixel_color(SDL_Surface_Ptr &surf, int x, int y, int w, p
 
 static void color_pixel_grayscale(pixel& pix)
 {
+    float amount = get_option<float>("TILES_FILTER_AMOUNT");
     bool isBlack = pix.isBlack();
     int result = (pix.r + pix.b + pix.g) / 3;
     result = result * 6 / 10;
@@ -322,33 +323,35 @@ static void color_pixel_grayscale(pixel& pix)
     if (result<1 && !isBlack){
         result = 1;
     }
-    pix.r = result;
-    pix.g = result;
-    pix.b = result;
+    pix.r = pix.r + amount * (result - pix.r);
+    pix.g = pix.g + amount * (result - pix.g);
+    pix.b = pix.b + amount * (result - pix.b);
 }
 
 static void color_pixel_nightvision(pixel& pix)
 {
+    float amount = get_option<float>("TILES_FILTER_AMOUNT");
     int result = (pix.r + pix.b + pix.g) / 3;
     result = result * 3 / 4 + 64;
     if (result > 255) {
         result = 255;
     }
-    pix.r = result / 4;
-    pix.g = result;
-    pix.b = result / 7;
+    pix.r = pix.r + amount * ((result / 4) - pix.r);
+    pix.g = pix.g + amount * (result - pix.g);
+    pix.b = pix.b + amount * ((result / 7) - pix.b);
 }
 
 static void color_pixel_overexposed(pixel& pix)
 {
+    float amount = get_option<float>("TILES_FILTER_AMOUNT");
     int result = (pix.r + pix.b + pix.g) / 3;
     result = result / 4 + 192;
     if (result > 255) {
         result = 255;
     }
-    pix.r = result / 4;
-    pix.g = result;
-    pix.b = result / 7;
+    pix.r = pix.r + amount * ((result / 4) - pix.r);
+    pix.g = pix.g + amount * (result - pix.g);
+    pix.b = pix.b + amount * ((result / 7) - pix.b);
 }
 
 static SDL_Surface_Ptr apply_color_filter( const SDL_Surface_Ptr &original,
