@@ -168,7 +168,7 @@
     "name": "Chain Lightning",
     "description": "Your body is equipped with a chain lightning generator, allowing you to emit a blast of lightning at a target, leaving a trail of lightning in its wake, jumping to additional targets within 4 tiles of the previous target.",
     "occupied_bodyparts": [ [ "TORSO", 16 ], [ "ARM_L", 4 ], [ "ARM_R", 4 ] ],
-    "act_cost": "100 kJ",
+    "act_cost": "1 kJ",
     "fake_item": "bio_lightning",
     "flags": [ "BIONIC_GUN", "BIONIC_NPC_USABLE" ]
   },
@@ -221,8 +221,8 @@
       [ "FOOT_L", 1 ],
       [ "FOOT_R", 1 ]
     ],
-    "act_cost": "30 kJ",
-    "react_cost": "30 kJ",
+    "act_cost": "500 J",
+    "react_cost": "50 J",
     "time": 1,
     "flags": [ "BIONIC_TOGGLED" ]
   },
@@ -317,7 +317,7 @@
     "name": "EMP Projector",
     "description": "A ranged EMP generator system is implanted on the palm of your right hand and arm.  The system fires precise, single-target pulses that require time to aim.  Extremely effective against electronic targets but mostly useless otherwise.",
     "occupied_bodyparts": [ [ "ARM_R", 10 ], [ "HAND_R", 5 ] ],
-    "act_cost": "50 kJ",
+    "act_cost": "1 kJ",
     "fake_item": "bio_emp_gun",
     "flags": [ "BIONIC_GUN" ]
   },
@@ -403,7 +403,7 @@
     "name": "Flashbang Generator",
     "description": "Light emitting diodes surgically integrated into your skin can release a flash comparable to a flashbang grenade, blinding nearby enemies.  Speakers integrated into your body mimic the loud sound, deafening those nearby.",
     "occupied_bodyparts": [ [ "TORSO", 20 ], [ "ARM_L", 2 ], [ "ARM_R", 2 ], [ "LEG_L", 3 ], [ "LEG_R", 3 ] ],
-    "act_cost": "10 kJ"
+    "act_cost": "600 J"
   },
   {
     "id": "bio_flashlight",
@@ -497,8 +497,8 @@
       [ "FOOT_R", 1 ]
     ],
     "flags": [ "BIONIC_TOGGLED", "BIONIC_NPC_USABLE" ],
-    "act_cost": "1 kJ",
-    "react_cost": "1 kJ",
+    "act_cost": "50 J",
+    "react_cost": "50 J",
     "time": 1
   },
   {
@@ -508,8 +508,8 @@
     "description": "While activated, your muscles will be greatly enhanced, increasing your strength by 20.",
     "occupied_bodyparts": [ [ "TORSO", 4 ], [ "ARM_L", 8 ], [ "ARM_R", 8 ], [ "LEG_L", 14 ], [ "LEG_R", 14 ] ],
     "flags": [ "BIONIC_TOGGLED", "BIONIC_NPC_USABLE" ],
-    "act_cost": "10 kJ",
-    "react_cost": "10 kJ",
+    "act_cost": "500 J",
+    "react_cost": "500 J",
     "time": 1
   },
   {
@@ -546,7 +546,7 @@
     "name": "Finger-Mounted Laser",
     "description": "One of your fingers has a small high-powered laser surgically embedded in it.  This long range weapon is not incredibly damaging, but is very accurate, and has the potential to start fires.",
     "occupied_bodyparts": [ [ "HAND_R", 1 ] ],
-    "act_cost": "30 kJ",
+    "act_cost": "3 kJ",
     "fake_item": "bio_laser_gun",
     "flags": [ "BIONIC_GUN", "BIONIC_NPC_USABLE" ]
   },
@@ -576,7 +576,7 @@
     "description": "The index fingers of both hands have powerful fire starters which extend from the tip.",
     "occupied_bodyparts": [ [ "HAND_L", 1 ], [ "HAND_R", 1 ] ],
     "fake_item": "fake_firestarter",
-    "act_cost": "3 kJ"
+    "act_cost": "1 J"
   },
   {
     "id": "bio_lockpick",
@@ -592,7 +592,7 @@
     "name": "Electromagnetic Unit",
     "description": "Surgically embedded in your right hand is a powerful electromagnet, allowing you to use your own strength to pull all nearby magnetic objects towards you.  Unlucky bystanders might be injured or killed by flying objects.",
     "occupied_bodyparts": [ [ "HAND_R", 3 ] ],
-    "act_cost": "10 kJ"
+    "act_cost": "1 kJ"
   },
   {
     "id": "bio_membrane",
@@ -827,7 +827,7 @@
     "name": "Sonic Resonator",
     "description": "Your entire body may resonate at very high power, creating a short-range shockwave.  While it will not do much damage to creatures, solid objects such as walls and doors will be damaged.",
     "occupied_bodyparts": [ [ "TORSO", 15 ], [ "HEAD", 1 ], [ "ARM_L", 2 ], [ "ARM_R", 2 ], [ "LEG_L", 4 ], [ "LEG_R", 4 ] ],
-    "act_cost": 100
+    "act_cost": "1 kJ"
   },
   {
     "id": "bio_scent_mask",
@@ -873,7 +873,7 @@
     "name": "Shockwave Generator",
     "description": "You generate a powerful shockwave, knocking back all nearby creatures.  Targets are stunned briefly, take damage and additional stun upon impact with impassable terrain, and knockback any creatures they collide with.",
     "occupied_bodyparts": [ [ "TORSO", 20 ] ],
-    "act_cost": 250
+    "act_cost": "1 kJ"
   },
   {
     "id": "bio_sleepy",
@@ -1092,7 +1092,7 @@
     "name": "Water Extraction Unit",
     "description": "Nanotubes surgically embedded in the palm of your hand will pump any available fluid out of a dead body, cleanse it of impurities and convert it into drinkable water.  You must, however, have a container to store the water in.",
     "occupied_bodyparts": [ [ "ARM_R", 1 ], [ "HAND_R", 2 ] ],
-    "act_cost": "20 kJ"
+    "act_cost": "1 kJ"
   },
   {
     "id": "bio_fuel_cell_gasoline",
