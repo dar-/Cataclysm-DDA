@@ -6556,7 +6556,7 @@ bool player::uncanny_dodge()
         return false;
     }
     tripoint adjacent = adjacent_tile();
-    mod_power_level( -75_kJ );
+    mod_power_level( -6_J );
     if( adjacent.x != posx() || adjacent.y != posy() ) {
         position.x = adjacent.x;
         position.y = adjacent.y;
