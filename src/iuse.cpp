@@ -7893,9 +7893,9 @@ int iuse::ehandcuffs( player *p, item *it, bool t, const tripoint &pos )
         }
 
         if( p->has_item( *it ) ) {
-            if( p->has_active_bionic( bionic_id( "bio_shock" ) ) && p->get_power_level() >= 2_kJ &&
+            if( p->has_active_bionic( bionic_id( "bio_shock" ) ) && p->get_power_level() >= 10_J &&
                 one_in( 5 ) ) {
-                p->mod_power_level( -2_kJ );
+                p->mod_power_level( -10_J );
 
                 it->item_tags.erase( "NO_UNWIELD" );
                 it->ammo_unset();
