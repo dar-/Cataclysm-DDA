@@ -5245,7 +5245,7 @@ void Character::update_stamina( int turns )
             stamina_recovery += bonus;
             bonus /= 10;
             bonus = std::max( bonus, 1 );
-            mod_power_level( units::from_kilojoule( -bonus ) );
+            mod_power_level( -1_J );
         }
     }
 

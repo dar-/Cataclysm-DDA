@@ -289,9 +289,9 @@ void Character::suffer_while_underwater()
         oxygen += 12;
     }
     if( oxygen <= 5 ) {
-        if( has_bionic( bio_gills ) && get_power_level() >= 25_kJ ) {
+        if( has_bionic( bio_gills ) && get_power_level() >= 1_J ) {
             oxygen += 5;
-            mod_power_level( -25_kJ );
+            mod_power_level( -1_J );
         } else {
             add_msg_if_player( m_bad, _( "You're drowning!" ) );
             apply_damage( nullptr, bp_torso, rng( 1, 4 ) );
