@@ -161,7 +161,7 @@
     "durability": 8,
     "modes": [ [ "DEFAULT", "semi-auto", 1 ], [ "AUTO", "auto", 4 ] ],
     "loudness": 12,
-    "ups_charges": 40,
+    "ups_charges": 4,
     "reload": 0,
     "valid_mod_locations": [
       [ "accessories", 4 ],
