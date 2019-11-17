@@ -1070,7 +1070,7 @@ void Character::process_bionic( int b )
         int max_pkill = std::min( 150, pain );
         if( pkill < max_pkill ) {
             mod_painkiller( 1 );
-            mod_power_level( -2_kJ );
+            mod_power_level( -1_J );
         }
 
         // Only dull pain so extreme that we can't pkill it safely
@@ -1078,7 +1078,7 @@ void Character::process_bionic( int b )
             mod_pain( -1 );
             // Negative side effect: negative stim
             mod_stim( -1 );
-            mod_power_level( -2_kJ );
+            mod_power_level( -5_J );
         }
     } else if( bio.id == "bio_cable" ) {
         if( is_max_power() ) {
