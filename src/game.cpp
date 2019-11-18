@@ -4663,6 +4663,7 @@ T *game::critter_by_id( const character_id id )
 }
 
 // monsters don't have ids
+template Character *game::critter_by_id<Character>( character_id );
 template player *game::critter_by_id<player>( character_id );
 template npc *game::critter_by_id<npc>( character_id );
 template Creature *game::critter_by_id<Creature>( character_id );
@@ -4854,7 +4855,7 @@ bool game::swap_critters( Creature &a, Creature &b )
         g->m.unboard_vehicle( u_or_npc->pos() );
     }
 
-    if( other_npc->in_vehicle ) {
+    if( other_npc && other_npc->in_vehicle ) {
         g->m.unboard_vehicle( other_npc->pos() );
     }
 
@@ -4866,7 +4867,7 @@ bool game::swap_critters( Creature &a, Creature &b )
         g->m.board_vehicle( u_or_npc->pos(), u_or_npc );
     }
 
-    if( g->m.veh_at( other_npc->pos() ).part_with_feature( VPFLAG_BOARDABLE, true ) ) {
+    if( other_npc && g->m.veh_at( other_npc->pos() ).part_with_feature( VPFLAG_BOARDABLE, true ) ) {
         g->m.board_vehicle( other_npc->pos(), other_npc );
     }
 
@@ -5781,7 +5782,7 @@ void game::print_all_tile_info( const tripoint &lp, const catacurses::window &w_
             print_items_info( lp, w_look, column, line, last_line );
             print_graffiti_info( lp, w_look, column, line, last_line );
 
-            if( draw_terrain_indicators ) {
+            if( draw_terrain_indicators && !liveview.is_enabled() ) {
                 if( creature != nullptr && u.sees( *creature ) ) {
                     creature->draw( w_terrain, lp, true );
                 } else {
@@ -5797,7 +5798,7 @@ void game::print_all_tile_info( const tripoint &lp, const catacurses::window &w_
         case VIS_HIDDEN:
             print_visibility_info( w_look, column, line, visibility );
 
-            if( draw_terrain_indicators ) {
+            if( draw_terrain_indicators && !liveview.is_enabled() ) {
                 print_visibility_indicator( visibility );
             }
             break;
