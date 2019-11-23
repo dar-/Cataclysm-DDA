@@ -199,7 +199,7 @@
     "dispersion": 180,
     "durability": 8,
     "loudness": 7,
-    "ups_charges": 20,
+    "ups_charges": 2,
     "reload": 200,
     "valid_mod_locations": [
       [ "accessories", 2 ],
