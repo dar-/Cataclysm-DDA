@@ -176,7 +176,7 @@
     "coverage": 5,
     "encumbrance": 2,
     "covers": [ "LEG_EITHER" ],
-    "flags": [ "NO_UNLOAD", "RECHARGE", "WAIST", "FRAGILE", "OVERSIZE", "WATERPROOF" ]
+    "flags": [ "WAIST", "OVERSIZE", "WATERPROOF", "IS_UPS" ]
   },
   {
     "id": "adv_UPS_off",
