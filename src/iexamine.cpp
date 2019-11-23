@@ -3376,6 +3376,7 @@ void iexamine::shrub_wildveggies( player &p, const tripoint &examp )
     }
 
     add_msg( _( "You forage through the %s." ), g->m.tername( examp ) );
+
     ///\EFFECT_SURVIVAL speeds up foraging
     int move_cost = 100000 / ( 2 * p.get_skill_level( skill_survival ) + 5 );
     ///\EFFECT_PER randomly speeds up foraging
@@ -5405,7 +5406,7 @@ void iexamine::smoker_options( player &p, const tripoint &examp )
                              _( "Reload with charcoal" ),
                              string_format(
                                  _( "You need %d charges of charcoal for %s %s of food.  Minimal amount of charcoal is %d charges." ),
-                                 sm_rack::CHARCOAL_PER_LITER, format_volume( 1000_ml ), volume_units_long(),
+                                 sm_rack::CHARCOAL_PER_LITER, format_volume( 1_liter ), volume_units_long(),
                                  sm_rack::MIN_CHARCOAL ) );
 
     } else {
