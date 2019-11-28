@@ -22,7 +22,7 @@
     "durability": 10,
     "modes": [ [ "DEFAULT", "semi-auto", 1 ], [ "AUTO", "auto", 3 ] ],
     "loudness": 23,
-    "ups_charges": 70,
+    "ups_charges": 7,
     "reload": 0,
     "valid_mod_locations": [
       [ "accessories", 4 ],
