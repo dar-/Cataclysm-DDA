@@ -2096,7 +2096,7 @@ int game::inventory_item_menu( int pos, int iStartX, int iWidth,
                     u.wear( oThisItem );
                     break;
                 case 'w':
-                    wield( pos );
+                    wield( locThisItem );
                     break;
                 case 't':
                     avatar_action::plthrow( u, pos );
@@ -2114,10 +2114,10 @@ int game::inventory_item_menu( int pos, int iStartX, int iWidth,
                     unload( pos );
                     break;
                 case 'r':
-                    reload( pos );
+                    reload( locThisItem );
                     break;
                 case 'p':
-                    reload( pos, true );
+                    reload( locThisItem, true );
                     break;
                 case 'm':
                     mend( pos );
@@ -5134,7 +5134,7 @@ bool game::forced_door_closing( const tripoint &p, const ter_id &door_type, int 
                 it = items.erase( it );
                 continue;
             }
-            m.add_item_or_charges( point( kbx, kby ), *it );
+            m.add_item_or_charges( kbp, *it );
             it = items.erase( it );
         }
     }
@@ -8454,12 +8454,6 @@ void game::change_side( int pos )
     u.change_side( pos );
 }
 
-void game::reload( int pos, bool prompt )
-{
-    item_location loc( u, &u.i_at( pos ) );
-    reload( loc, prompt );
-}
-
 void game::reload( item_location &loc, bool prompt, bool empty )
 {
     item *it = loc.get_item();
@@ -8681,12 +8675,6 @@ bool game::unload( item &it )
     return u.unload( it );
 }
 
-void game::wield( int pos )
-{
-    item_location loc( u, &u.i_at( pos ) );
-    wield( loc );
-}
-
 void game::wield( item_location &loc )
 {
     if( u.is_armed() ) {
@@ -8867,7 +8855,7 @@ bool game::disable_robot( const tripoint &p )
         query_yn( _( "Deactivate the %s?" ), critter.name() ) ) {
 
         u.moves -= 100;
-        m.add_item_or_charges( p.xy(), critter.to_item() );
+        m.add_item_or_charges( p, critter.to_item() );
         if( !critter.has_flag( MF_INTERIOR_AMMO ) ) {
             for( auto &ammodef : critter.ammo ) {
                 if( ammodef.second > 0 ) {
