@@ -1140,6 +1140,11 @@ void options_manager::add_options_general()
          false
        );
 
+    add( "DANGEROUS_RUNNING", "general", translate_marker( "Dangerous running" ),
+         translate_marker( "If true, the player will not be prevented from moving into known hazardous tiles while running." ),
+         false
+       );
+
     mOptionsSort["general"]++;
 
     add( "SAFEMODE", "general", translate_marker( "Safe mode" ),
@@ -1183,7 +1188,7 @@ void options_manager::add_options_general()
 
     add( "AUTOSAVE", "general", translate_marker( "Autosave" ),
          translate_marker( "If true, game will periodically save the map.  Autosaves occur based on in-game turns or real-time minutes, whichever is larger." ),
-         false
+         true
        );
 
     add( "AUTOSAVE_TURNS", "general", translate_marker( "Game turns between autosaves" ),
@@ -1238,6 +1243,11 @@ void options_manager::add_options_general()
          translate_marker( "Always: Always start deathcam.  Ask: Query upon death.  Never: Never show deathcam." ),
     { { "always", translate_marker( "Always" ) }, { "ask", translate_marker( "Ask" ) }, { "never", translate_marker( "Never" ) } },
     "ask"
+       );
+
+    add( "MAP_UI_SEARCH_RADIUS", "general", translate_marker( "Map search radius" ),
+         translate_marker( "Radius around the cursor to search in the map UI.  Setting very high may be slow." ),
+         10, 4000, 100
        );
 
     mOptionsSort["general"]++;
@@ -2999,7 +3009,7 @@ void options_manager::update_global_locale()
             std::locale::global( std::locale( "zh_CN.UTF-8" ) );
         } else if( lang == "zh_TW" ) {
             std::locale::global( std::locale( "zh_TW.UTF-8" ) );
-        };
+        }
     } catch( std::runtime_error &e ) {
         std::locale::global( std::locale() );
     }

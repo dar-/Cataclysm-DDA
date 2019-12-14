@@ -9,7 +9,7 @@
 #include "messages.h"
 #include "point.h"
 
-const efftype_id effect_teleglow( "teleglow" );
+static const efftype_id effect_teleglow( "teleglow" );
 
 bool teleport::teleport( Creature &critter, int min_distance, int max_distance, bool safe,
                          bool add_teleglow )
@@ -82,7 +82,8 @@ bool teleport::teleport( Creature &critter, int min_distance, int max_distance, 
                              critter.disp_name(), poor_soul->disp_name() );
                 }
             }
-            poor_soul->apply_damage( nullptr, bp_torso, 9999 ); //Splatter real nice.
+            //Splatter real nice.
+            poor_soul->apply_damage( nullptr, bp_torso, 9999 );
             poor_soul->check_dead_state();
         }
     }

@@ -471,7 +471,8 @@ WORLDPTR worldfactory::pick_world( bool show_prompt )
         wmove( w_worlds_header, point( 7, 0 ) );
 
         for( size_t i = 0; i < num_pages; ++i ) {
-            if( !world_pages[i].empty() ) { //skip empty pages
+            //skip empty pages
+            if( !world_pages[i].empty() ) {
                 nc_color tabcolor = ( selpage == i ) ? hilite( c_white ) : c_white;
                 wprintz( w_worlds_header, c_white, "[" );
                 wprintz( w_worlds_header, tabcolor, _( "Page %lu" ), i + 1 ) ;
@@ -505,7 +506,9 @@ WORLDPTR worldfactory::pick_world( bool show_prompt )
             }
         } else if( action == "NEXT_TAB" ) {
             sel = 0;
-            do { //skip empty pages
+
+            do {
+                //skip empty pages
                 selpage++;
                 if( selpage >= world_pages.size() ) {
                     selpage = 0;
@@ -513,7 +516,8 @@ WORLDPTR worldfactory::pick_world( bool show_prompt )
             } while( world_pages[selpage].empty() );
         } else if( action == "PREV_TAB" ) {
             sel = 0;
-            do { //skip empty pages
+            do {
+                //skip empty pages
                 if( selpage != 0 ) {
                     selpage--;
                 } else {
@@ -704,7 +708,8 @@ void worldfactory::draw_mod_list( const catacurses::window &w, int &start, size_
         }
     }
 
-    if( first_line_is_category && iActive == 1 ) {  // Ensure that the scrollbar starts at zero position
+    // Ensure that the scrollbar starts at zero position
+    if( first_line_is_category && iActive == 1 ) {
         draw_scrollbar( w, 0, iMaxRows, static_cast<int>( iModNum ), point_zero );
     } else {
         draw_scrollbar( w, static_cast<int>( iActive ), iMaxRows, static_cast<int>( iModNum ), point_zero );
@@ -1401,19 +1406,19 @@ bool WORLD::load_options()
     return false;
 }
 
-void load_world_option( JsonObject &jo )
+void load_world_option( const JsonObject &jo )
 {
     auto arr = jo.get_array( "options" );
     if( arr.empty() ) {
         jo.throw_error( "no options specified", "options" );
     }
-    while( arr.has_more() ) {
-        get_options().get_option( arr.next_string() ).setValue( "true" );
+    for( const std::string &line : arr ) {
+        get_options().get_option( line ).setValue( "true" );
     }
 }
 
 //load external option from json
-void load_external_option( JsonObject &jo )
+void load_external_option( const JsonObject &jo )
 {
     auto name = jo.get_string( "name" );
     auto stype = jo.get_string( "stype" );
