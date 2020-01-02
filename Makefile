@@ -276,7 +276,7 @@ ifdef RELEASE
   CXXFLAGS += $(OPTLEVEL)
 
   ifdef LTO
-    LDFLAGS += -fuse-ld=gold
+#    LDFLAGS += -fuse-ld=gold
     ifdef CLANG
       LTOFLAGS += -flto
     else
