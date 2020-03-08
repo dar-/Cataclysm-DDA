@@ -134,7 +134,7 @@ input_context game::get_player_input( std::string &action )
             ctxt.register_action( action_ident( id ) );
         }
         // *INDENT-ON*
-        ctxt.register_action( "QUIT", _( "Accept your fate" ) );
+        ctxt.register_action( "QUIT", to_translation( "Accept your fate" ) );
     } else {
         ctxt = get_default_mode_input_context();
     }
@@ -1412,7 +1412,7 @@ static void cast_spell()
         return;
     }
 
-    if( sp.energy_source() == hp_energy && !u.has_quality( quality_CUT ) ) {
+    if( sp.energy_source() == hp_energy && !u.has_quality( qual_CUT ) ) {
         add_msg( m_bad, _( "You cannot cast Blood Magic without a cutting implement." ) );
         return;
     }

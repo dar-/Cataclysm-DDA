@@ -114,11 +114,13 @@ void vehicle::thrust( int thd )
     if( in_water && can_float() ) {
         // we're good
     } else if( is_floating && !can_float() ) {
+        stop();
         if( pl_ctrl ) {
             add_msg( _( "The %s is too leaky!" ), name );
         }
         return;
     } else if( !valid_wheel_config() ) {
+        stop();
         if( pl_ctrl ) {
             add_msg( _( "The %s doesn't have enough wheels to move!" ), name );
         }
@@ -463,7 +465,7 @@ veh_collision vehicle::part_collision( int part, const tripoint &p,
             return ret;
         }
         // we just ran into a fish, so move it out of the way
-        if( g->m.has_flag( flag_SWIMMABLE, critter->pos() ) ) {
+        if( g->m.has_flag( "SWIMMABLE", critter->pos() ) ) {
             tripoint end_pos = critter->pos();
             tripoint start_pos;
             const int angle = move.dir() + 45 * ( parts[part].mount.x > pivot_point().x ? -1 : 1 );
@@ -988,7 +990,8 @@ void vehicle::pldrive( const point &p )
     }
 
     // TODO: Actually check if we're on land on water (or disable water-skidding)
-    if( skidding && valid_wheel_config() ) {
+    // Only check for recovering from a skid if we did active steering (not cruise control).
+    if( skidding && ( p.x != 0 || ( p.y != 0 && !cruise_on ) ) && valid_wheel_config() ) {
         ///\EFFECT_DEX increases chance of regaining control of a vehicle
 
         ///\EFFECT_DRIVING increases chance of regaining control of a vehicle
