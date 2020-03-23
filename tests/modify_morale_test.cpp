@@ -1,12 +1,42 @@
 #include "avatar.h"
 #include "character.h"
-#include "cata_string_consts.h"
 #include "game.h"
 #include "map.h"
 #include "morale.h"
 
 #include "catch/catch.hpp"
 #include "map_helpers.h"
+
+static const std::string flag_ALLERGEN_JUNK( "ALLERGEN_JUNK" );
+static const std::string flag_CANNIBALISM( "CANNIBALISM" );
+static const std::string flag_EATEN_HOT( "EATEN_HOT" );
+static const std::string flag_HOT( "HOT" );
+static const std::string flag_URSINE_HONEY( "URSINE_HONEY" );
+
+static const trait_id trait_ANTIFRUIT( "ANTIFRUIT" );
+static const trait_id trait_ANTIJUNK( "ANTIJUNK" );
+static const trait_id trait_ANTIWHEAT( "ANTIWHEAT" );
+static const trait_id trait_BADTEMPER( "BADTEMPER" );
+static const trait_id trait_CANNIBAL( "CANNIBAL" );
+static const trait_id trait_CARNIVORE( "CARNIVORE" );
+static const trait_id trait_CLAWS( "CLAWS" );
+static const trait_id trait_FAT( "FAT" );
+static const trait_id trait_HIBERNATE( "HIBERNATE" );
+static const trait_id trait_LACTOSE( "LACTOSE" );
+static const trait_id trait_LARGE( "LARGE" );
+static const trait_id trait_MEATARIAN( "MEATARIAN" );
+static const trait_id trait_PADDED_FEET( "PADDED_FEET" );
+static const trait_id trait_PROJUNK( "PROJUNK" );
+static const trait_id trait_PROJUNK2( "PROJUNK2" );
+static const trait_id trait_PSYCHOPATH( "PSYCHOPATH" );
+static const trait_id trait_SAPIOVORE( "SAPIOVORE" );
+static const trait_id trait_SAPROPHAGE( "SAPROPHAGE" );
+static const trait_id trait_SPIRITUAL( "SPIRITUAL" );
+static const trait_id trait_TABLEMANNERS( "TABLEMANNERS" );
+static const trait_id trait_THRESH_URSINE( "THRESH_URSINE" );
+static const trait_id trait_URSINE_EYE( "URSINE_EYE" );
+static const trait_id trait_URSINE_FUR( "URSINE_FUR" );
+static const trait_id trait_VEGETARIAN( "VEGETARIAN" );
 
 // Test cases for `Character::modify_morale` defined in `src/consumption.cpp`
 
@@ -50,6 +80,12 @@ TEST_CASE( "dining with table and chair", "[food][modify_morale][table][chair]" 
     REQUIRE( bread.is_fresh() );
     REQUIRE_FALSE( bread.has_flag( flag_ALLERGEN_JUNK ) );
 
+    // Table/chair morale effects should not apply to non-ingestibles
+    item bandage( "bandages" );
+    item cig( "cig" );
+    REQUIRE( bandage.has_flag( "NO_INGEST" ) );
+    REQUIRE( cig.has_flag( "NO_INGEST" ) );
+
     GIVEN( "no table or chair are nearby" ) {
         REQUIRE_FALSE( g->m.has_nearby_table( dummy.pos(), 1 ) );
         REQUIRE_FALSE( g->m.has_nearby_chair( dummy.pos(), 1 ) );
@@ -72,6 +108,19 @@ TEST_CASE( "dining with table and chair", "[food][modify_morale][table][chair]" 
                 dummy.clear_morale();
                 dummy.modify_morale( bread );
                 CHECK( dummy.has_morale( MORALE_ATE_WITHOUT_TABLE ) <= -2 );
+            }
+
+            THEN( "they do not get a morale penalty for applying a bandage without a table" ) {
+                // Regression test for #38698
+                dummy.clear_morale();
+                dummy.modify_morale( bandage );
+                CHECK_FALSE( dummy.has_morale( MORALE_ATE_WITHOUT_TABLE ) );
+            }
+
+            THEN( "they do not get a morale penalty for smoking a cigarette without a table" ) {
+                dummy.clear_morale();
+                dummy.modify_morale( cig );
+                CHECK_FALSE( dummy.has_morale( MORALE_ATE_WITHOUT_TABLE ) );
             }
         }
     }
@@ -100,6 +149,19 @@ TEST_CASE( "dining with table and chair", "[food][modify_morale][table][chair]" 
                 dummy.clear_morale();
                 dummy.modify_morale( bread );
                 CHECK( dummy.has_morale( MORALE_ATE_WITH_TABLE ) >= 3 );
+            }
+
+            THEN( "they do not get a morale bonus for applying a bandage with a table" ) {
+                // Regression test for #38698
+                dummy.clear_morale();
+                dummy.modify_morale( bandage );
+                CHECK_FALSE( dummy.has_morale( MORALE_ATE_WITH_TABLE ) );
+            }
+
+            THEN( "they do not get a morale bonus for smoking a cigarette with a table" ) {
+                dummy.clear_morale();
+                dummy.modify_morale( cig );
+                CHECK_FALSE( dummy.has_morale( MORALE_ATE_WITH_TABLE ) );
             }
         }
     }
@@ -136,6 +198,46 @@ TEST_CASE( "eating hot food", "[food][modify_morale][hot]" )
     }
 }
 
+TEST_CASE( "drugs", "[food][modify_morale][drug]" )
+{
+    avatar dummy;
+    std::pair<int, int> fun;
+
+    std::vector<std::string> drugs_to_test = {
+        {
+            "gum",
+            "caff_gum",
+            "nic_gum",
+            "cig",
+            "ecig",
+            "cigar",
+            "joint",
+            "lsd",
+            "weed",
+            "crack",
+            "meth",
+            "heroin",
+            "tobacco",
+            "morphine"
+        }
+    };
+
+    GIVEN( "avatar has baseline morale" ) {
+        dummy.clear_morale();
+        REQUIRE( dummy.has_morale( MORALE_FOOD_GOOD ) == 0 );
+
+        for( std::string drug_name : drugs_to_test ) {
+            item drug( drug_name );
+            fun = dummy.fun_for( drug );
+            REQUIRE( fun.first > 0 );
+
+            THEN( "they enjoy " + drug_name ) {
+                dummy.modify_morale( drug );
+                CHECK( dummy.has_morale( MORALE_FOOD_GOOD ) >= fun.first );
+            }
+        }
+    }
+}
 
 TEST_CASE( "cannibalism", "[food][modify_morale][cannibal]" )
 {
