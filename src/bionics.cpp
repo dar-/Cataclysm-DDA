@@ -58,7 +58,6 @@
 #include "output.h"
 #include "overmapbuffer.h"
 #include "pimpl.h"
-#include "player.h"
 #include "player_activity.h"
 #include "pldata.h"
 #include "point.h"
@@ -452,7 +451,7 @@ bool Character::activate_bionic( int b, bool eff_only )
         int humidity = get_local_humidity( weatherPoint.humidity, g->weather.weather,
                                            g->is_sheltered( g->u.pos() ) );
         // thirst units = 5 mL
-        int water_available = lround( humidity * 3.0 / 100.0 );
+        int water_available = std::lround( humidity * 3.0 / 100.0 );
         if( water_available == 0 ) {
             bio.powered = false;
             add_msg_if_player( m_bad, _( "There is not enough humidity in the air for your %s to function." ),
@@ -989,19 +988,13 @@ bool Character::deactivate_bionic( int b, bool eff_only )
         invalidate_crafting_inventory();
     }
 
-    return true;
-}
-
-bool player::deactivate_bionic( int b, bool eff_only )
-{
-    const bionic &bio = ( *my_bionics )[b];
-    bool success = Character::deactivate_bionic( b, eff_only );
     // Compatibility with old saves without the toolset hammerspace
-    if( success && !eff_only && bio.id == bio_tools && !has_bionic( bionic_TOOLS_EXTEND ) ) {
+    if( !eff_only && bio.id == bio_tools && !has_bionic( bionic_TOOLS_EXTEND ) ) {
         // E X T E N D    T O O L S
         add_bionic( bionic_TOOLS_EXTEND );
     }
-    return success;
+
+    return true;
 }
 
 bool Character::burn_fuel( int b, bool start )
@@ -1307,7 +1300,7 @@ void Character::heat_emission( int b, int fuel_energy )
         const int heat_spread = std::max( heat_prod / 10 - heat_level, 1 );
         g->m.emit_field( pos(), hotness, heat_spread );
     }
-    for( const std::pair<body_part, size_t> &bp : bio.info().occupied_bodyparts ) {
+    for( const std::pair<const body_part, size_t> &bp : bio.info().occupied_bodyparts ) {
         add_effect( effect_heating_bionic, 2_seconds, bp.first, false, heat_prod );
     }
 }
@@ -1526,7 +1519,7 @@ void Character::process_bionic( int b )
             int humidity = get_local_humidity( weatherPoint.humidity, g->weather.weather,
                                                g->is_sheltered( g->u.pos() ) );
             // in thirst units = 5 mL water
-            int water_available = lround( humidity * 3.0 / 100.0 );
+            int water_available = std::lround( humidity * 3.0 / 100.0 );
             // At 50% relative humidity or more, the player will draw 10 mL
             // At 16% relative humidity or less, the bionic will give up
             if( water_available == 0 ) {
@@ -2226,8 +2219,10 @@ void Character::perform_install( bionic_id bid, bionic_id upbid, int difficulty,
         add_bionic( bid );
 
         if( !trait_to_rem.empty() ) {
-            for( trait_id tid : trait_to_rem ) {
-                remove_mutation( tid );
+            for( const trait_id &tid : trait_to_rem ) {
+                if( has_trait( tid ) ) {
+                    remove_mutation( tid );
+                }
             }
         }
 
@@ -2454,12 +2449,12 @@ void Character::remove_bionic( const bionic_id &b )
     }
 }
 
-int player::num_bionics() const
+int Character::num_bionics() const
 {
     return my_bionics->size();
 }
 
-std::pair<int, int> player::amount_of_storage_bionics() const
+std::pair<int, int> Character::amount_of_storage_bionics() const
 {
     units::energy lvl = get_max_power_level();
 
@@ -2492,12 +2487,12 @@ std::pair<int, int> player::amount_of_storage_bionics() const
     return results;
 }
 
-bionic &player::bionic_at_index( int i )
+bionic &Character::bionic_at_index( int i )
 {
     return ( *my_bionics )[i];
 }
 
-void player::clear_bionics()
+void Character::clear_bionics()
 {
     my_bionics->clear();
 }
