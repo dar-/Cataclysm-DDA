@@ -17,6 +17,7 @@ Use the `Home` key to return to the top.
     + [Other formatting](#other-formatting)
 - [Description and content of each JSON file](#description-and-content-of-each-json-file)
   * [`data/json/` JSONs](#datajson-jsons)
+    + [Ascii_arts](#ascii_arts)
     + [Body_parts](#body_parts)
     + [Bionics](#bionics)
     + [Dreams](#dreams)
@@ -44,10 +45,11 @@ Use the `Home` key to return to the top.
     + [Recipes](#recipes)
     + [Constructions](#constructions)
     + [Scent Types](#scent_types)
-    + [Scores](#scores)
-      - [`event_transformation`](#-event-transformation-)
-      - [`event_statistic`](#-event-statistic-)
-      - [`score`](#-score-)
+    + [Scores and Achievements](#scores-and-achievements)
+      - [`event_transformation`](#event_transformation)
+      - [`event_statistic`](#event_statistic)
+      - [`score`](#score)
+      - [`achievement`](#achievement)
     + [Skills](#skills)
     + [Traits/Mutations](#traits-mutations)
     + [Vehicle Groups](#vehicle-groups)
@@ -182,7 +184,9 @@ Here's a quick summary of what each of the JSON files contain, broken down by fo
 
 | Filename                    | Description
 |---                          |---
+| achievements.json           | achievements
 | anatomy.json                | a listing of player body parts - do not edit
+| ascii_arts.json             | ascii arts for item descriptions
 | bionics.json                | bionics, does NOT include bionic effects
 | body_parts.json             | an expansion of anatomy.json - do not edit
 | clothing_mods.json          | definition of clothing mods
@@ -225,11 +229,12 @@ Here's a quick summary of what each of the JSON files contain, broken down by fo
 | road_vehicles.json          | vehicle spawn information for roads
 | rotatable_symbols.json      | rotatable symbols - do not edit
 | scent_types.json            | type of scent available
-| scores.json                 | statistics, scores, and achievements
+| scores.json                 | scores
 | skills.json                 | skill descriptions and ID's
 | snippets.json               | flier/poster descriptions
 | species.json                | monster species
 | speech.json                 | monster vocalizations
+| statistics.json             | statistics and transformations used to define scores and achievements
 | start_locations.json        | starting locations for scenarios
 | techniques.json             | generic for items and martial arts
 | terrain.json                | terrain types and definitions
@@ -300,11 +305,15 @@ Groups of vehicle definitions with self-explanatory names of files:
 | Filename
 |---
 | bikes.json
+| boats.json
 | cars.json
 | carts.json
+| custom_vehicles.json
 | emergency.json
 | farm.json
+| helicopters.json
 | military.json
+| trains.json
 | trucks.json
 | utility.json
 | vans_busses.json
@@ -377,6 +386,36 @@ This section describes each json file and their contents. Each json has their ow
 
 
 ## `data/json/` JSONs
+
+### Ascii_arts
+
+| Identifier        | Description
+|---                |---
+| id                | Unique ID. Must be one continuous word, use underscores if necessary.
+| picture           | Array of string, each entry is a line of an ascii picture and must be at most 42 columns long.
+
+```C++
+  {
+    "type": "ascii_art",
+    "id": "cashcard",
+    "picture": [
+      "",
+      "",
+      "",
+      "       <color_white>╔═══════════════════╗",
+      "       <color_white>║                   ║",
+      "       <color_white>║</color> <color_yellow>╔═   ╔═╔═╗╔═║ ║</color>   <color_white>║",
+      "       <color_white>║</color> <color_yellow>║═ ┼ ║ ║═║╚╗║═║</color>   <color_white>║",
+      "       <color_white>║</color> <color_yellow>╚═   ╚═║ ║═╝║ ║</color>   <color_white>║",
+      "       <color_white>║                   ║",
+      "       <color_white>║   RIVTECH TRUST   ║",
+      "       <color_white>║                   ║",
+      "       <color_white>║                   ║",
+      "       <color_white>║ 555 993 55221 066 ║",
+      "       <color_white>╚═══════════════════╝"
+    ]
+  }
+```
 
 ### Body_parts
 
@@ -484,9 +523,9 @@ This section describes each json file and their contents. Each json has their ow
     "name": "Air Filtration System",
     "description": "Surgically implanted in your trachea is an advanced filtration system.  If toxins, or airborne diseases find their way into your windpipe, the filter will attempt to remove them.",
     "occupied_bodyparts": [ [ "TORSO", 4 ], [ "MOUTH", 2 ] ],
-    "env_protec": [ [ "MOUTH", 7 ] ],
-    "bash_protec": [ [ "LEG_L", 3 ], [ "LEG_R", 3 ] ],
-    "cut_protec": [ [ "LEG_L", 3 ], [ "LEG_R", 3 ] ],
+    "env_protec": [ [ "mouth", 7 ] ],
+    "bash_protec": [ [ "leg_l", 3 ], [ "leg_r", 3 ] ],
+    "cut_protec": [ [ "leg_l", 3 ], [ "leg_r", 3 ] ],
     "flags": [ "BIONIC_NPC_USABLE" ]
 }
 ```
@@ -1060,7 +1099,7 @@ request](https://github.com/CleverRaven/Cataclysm-DDA/pull/36657) and the
   }
 ```
 
-### Scores and achievements
+### Scores and Achievements
 
 Scores are defined in two or three steps based on *events*.  To see what events
 exist and what data they contain, read [`event.h`](../src/event.h).
@@ -1178,6 +1217,18 @@ The sum of the numeric value in the specified field across all events:
 "field" : "damage"
 ```
 
+The maximum of the numeric value in the specified field across all events:
+```C++
+"stat_type" : "maximum"
+"field" : "damage"
+```
+
+The minimum of the numeric value in the specified field across all events:
+```C++
+"stat_type" : "minimum"
+"field" : "damage"
+```
+
 Assume there is only a single event to consider, and take the value of the
 given field for that unique event:
 ```C++
@@ -1187,7 +1238,8 @@ given field for that unique event:
 
 Regardless of `stat_type`, each `event_statistic` can also have:
 ```C++
-"description": "Number of things" // Intended for use in describing achievement requirements.
+// Intended for use in describing scores and achievement requirements.
+"description": "Number of things"
 ```
 
 #### `score`
@@ -1198,6 +1250,9 @@ of scores.  The `description` specifies a string which is expected to contain a
 
 Note that even though most statistics yield an integer, you should still use
 `%s`.
+
+If the underlying statistic has a description, then the score description is
+optional.  It defaults to "<statistic description>: <value>".
 
 ```C++
 "id": "score_headshots",
@@ -1218,8 +1273,10 @@ an `event_statistic`.  For example:
 {
   "id": "achievement_kill_zombie",
   "type": "achievement",
-  // The achievement description is used for the UI.
-  "description": "One down, billions to go\u2026",
+  // The achievement name and description are used for the UI.
+  // Description is optional and can provide extra details if you wish.
+  "name": "One down, billions to go\u2026",
+  "description": "Kill a zombie",
   "requirements": [
     // Each requirement must specify the statistic being constrained, and the
     // constraint in terms of a comparison against some target value.
@@ -1227,6 +1284,40 @@ an `event_statistic`.  For example:
   ]
 },
 ```
+
+The `"is"` field must be `">="`, `"<="` or `"anything"`.  When it is not
+`"anything"` the `"target"` must be present, and must be an integer.
+
+Another optional field is
+
+```C++
+"time_constraint": { "since": "game_start", "is": "<=", "target": "1 minute" }
+```
+
+This allows putting a time limit (either a lower or upper bound) on when the
+achievement can be claimed.  The `"since"` field can be either `"game_start"`
+or `"cataclysm"`.  The `"target"` describes an amount of time since that
+reference point.
+
+Note that achievements can only be captured when a statistic listed in their
+requirements changes.  So, if you want an achievement which would normally be
+triggered by reaching some time threshold (such as "survived a certain amount
+of time") then you must place some requirement alongside it to trigger it after
+that time has passed.  Pick some statistic which is likely to change often, and
+add an `"anything"` constraint on it.  For example:
+
+```C++
+{
+  "id": "achievement_survive_one_day",
+  "type": "achievement",
+  "description": "The first day of the rest of their unlives",
+  "time_constraint": { "since": "game_start", "is": ">=", "target": "1 day" },
+  "requirements": [ { "event_statistic": "num_avatar_wake_ups", "is": "anything" } ]
+},
+```
+
+This is a simple "survive a day" but is triggered by waking up, so it will be
+completed when you wake up for the first time after 24 hours into the game.
 
 ### Skills
 
@@ -1373,6 +1464,8 @@ Vehicle components when installed on a vehicle.
                                *    power       = base engine power in watts
                                *    bonus       = bonus granted; muffler = noise reduction%, seatbelt = bonus to not being thrown from vehicle
                                *    par1        = generic value used for unique bonuses, like the headlight's light intensity */
+"wheel_type":                 // (Optional: standard, off-road)
+"contact_area":               // (Optional) Affects vehicle ground pressure
 "cargo_weight_modifier": 33,  // (Optional, default = 100) Modifies cargo weight by set percentage
 "fuel_type": "NULL",          // (Optional, default = "NULL") Type of fuel/ammo the part consumes, as an item id
 
@@ -1489,33 +1582,7 @@ See also VEHICLE_JSON.md
 "symbol": "[",                   // The item symbol as it appears on the map. Must be a Unicode string exactly 1 console cell width.
 "looks_like": "rag",              // hint to tilesets if this item has no tile, use the looks_like tile
 "description": "Socks. Put 'em on your feet.", // Description of the item
-"ascii_picture": [
-      "        ,,,,,,,,,,,,,",
-      "    .;;;;;;;;;;;;;;;;;;;,.",
-      " .;;;;;;;;;;;;;;;;;;;;;;;;,",
-      ".;;;;;;;;;;;;;;;;;;;;;;;;;;;;.",
-      ";;;;;@;;;;;;;;;;;;;;;;;;;;;;;;' .............",
-      ";;;;@@;;;;;;;;;;;;;;;;;;;;;;;;'.................",
-      ";;;;@@;;;;;;;;;;;;;;;;;;;;;;;;'...................`",
-      ";;;;@;;;;;;;;;;;;;;;@;;;;;;;'.....................",
-      " `;;;;;;;;;;;;;;;;;;;@@;;;;;'..................;....", // Ascii art that  will be displayed at the bottom of the item description. Array of string with each element being a line of the picture. Lines longer than 42 characters won't display properly.
-      "   `;;;;;;;;;;;;;;;;@@;;;;'....................;;...",
-      "     `;;;;;;;;;;;;;@;;;;'...;.................;;....",
-      "        `;;;;;;;;;;;;'   ...;;...............;.....",
-      "           `;;;;;;'        ...;;..................",
-      "              ;;              ..;...............",
-      "              `                  ............",
-      "             `                      ......",
-      "             `                         ..",
-      "           `                           '",
-      "          `                           '",
-      "         `                           '",
-      "        `                           `",
-      "        `                           `,",
-      "        `",
-      "         `",
-      "           `."
-    ],
+"ascii_picture": "ascii_socks", // Id of the asci_art used for this item
 "phase": "solid",                            // (Optional, default = "solid") What phase it is
 "weight": "350 g",                           // Weight, weight in grams, mg and kg can be used - "50 mg", "5 g" or "5 kg". For stackable items (ammo, comestibles) this is the weight per charge.
 "volume": "250 ml",                          // Volume, volume in ml and L can be used - "50 ml" or "2 L". For stackable items (ammo, comestibles) this is the volume of stack_size charges.
@@ -2030,7 +2097,7 @@ Possible values (see src/enums.h for an up-to-date list):
 - `AEP_STEALTH` Your steps are quieted
 - `AEP_EXTINGUISH` May extinguish nearby flames
 - `AEP_GLOW` Four-tile light source
-- `AEP_PSYSHIELD` Protection from stare attacks
+- `AEP_PSYSHIELD` Protection from fear paralyze attack
 - `AEP_RESIST_ELECTRICITY` Protection from electricity
 - `AEP_CARRY_MORE` Increases carrying capacity by 200
 - `AEP_SAP_LIFE` Killing non-zombie monsters may heal you

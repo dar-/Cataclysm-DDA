@@ -642,7 +642,8 @@ int npc::faction_display( const catacurses::window &fac_w, const int width ) con
     const auto skillslist = Skill::get_skills_sorted_by( [&]( const Skill & a, const Skill & b ) {
         const int level_a = get_skill_level( a.ident() );
         const int level_b = get_skill_level( b.ident() );
-        return level_a > level_b || ( level_a == level_b && a.name() < b.name() );
+        return localized_compare( std::make_pair( -level_a, a.name() ),
+                                  std::make_pair( -level_b, b.name() ) );
     } );
     size_t count = 0;
     std::vector<std::string> skill_strs;
@@ -892,7 +893,7 @@ void faction_manager::display() const
             } else {
                 selection--;
             }
-        } else if( action == "CONFIRM" ) {
+        } else if( action == "CONFIRM" && guy ) {
             if( guy->has_companion_mission() ) {
                 guy->reset_companion_mission();
                 popup( _( "%s returns from their mission" ), guy->disp_name() );
