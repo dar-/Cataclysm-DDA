@@ -925,40 +925,6 @@ void player::search_surroundings()
     }
 }
 
-int player::talk_skill() const
-{
-    /** @EFFECT_INT slightly increases talking skill */
-
-    /** @EFFECT_PER slightly increases talking skill */
-
-    /** @EFFECT_SPEECH increases talking skill */
-    int ret = get_int() + get_per() + get_skill_level( skill_id( "speech" ) ) * 3;
-    return ret;
-}
-
-int player::intimidation() const
-{
-    /** @EFFECT_STR increases intimidation factor */
-    int ret = get_str() * 2;
-    if( weapon.is_gun() ) {
-        ret += 10;
-    }
-    if( weapon.damage_melee( DT_BASH ) >= 12 ||
-        weapon.damage_melee( DT_CUT ) >= 12 ||
-        weapon.damage_melee( DT_STAB ) >= 12 ) {
-        ret += 5;
-    }
-
-    if( get_stim() > 20 ) {
-        ret += 2;
-    }
-    if( has_effect( effect_drunk ) ) {
-        ret -= 4;
-    }
-
-    return ret;
-}
-
 bool player::is_dead_state() const
 {
     return hp_cur[hp_head] <= 0 || hp_cur[hp_torso] <= 0;
@@ -1126,7 +1092,7 @@ bool player::immune_to( body_part bp, damage_unit dam ) const
         return true;
     }
 
-    passive_absorb_hit( bp, dam );
+    passive_absorb_hit( convert_bp( bp ).id(), dam );
 
     for( const item &cloth : worn ) {
         if( cloth.get_coverage() == 100 && cloth.covers( bp ) ) {
@@ -2015,7 +1981,7 @@ bool player::can_interface_armor() const
 {
     bool okay = std::any_of( my_bionics->begin(), my_bionics->end(),
     []( const bionic & b ) {
-        return b.powered && b.info().armor_interface;
+        return b.powered && b.info().has_flag( "BIONIC_ARMOR_INTERFACE" );
     } );
     return okay;
 }
@@ -2246,8 +2212,6 @@ item::reload_option player::select_ammo( const item &base,
     menu.text = string_format( base.is_watertight_container() ? _( "Refill %s" ) :
                                base.has_flag( "RELOAD_AND_SHOOT" ) ? _( "Select ammo for %s" ) : _( "Reload %s" ),
                                base.tname() );
-    menu.w_width = -1;
-    menu.w_height = -1;
 
     // Construct item names
     std::vector<std::string> names;
@@ -2792,7 +2756,7 @@ void player::mend_item( item_location &&obj, bool interactive )
         uilist menu;
         menu.text = _( "Mend which fault?" );
         menu.desc_enabled = true;
-        menu.desc_lines = 0; // Let uilist handle description height
+        menu.desc_lines_hint = 0; // Let uilist handle description height
 
         constexpr int fold_width = 80;
 

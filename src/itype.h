@@ -259,6 +259,11 @@ struct islot_armor {
      * Restricted clothing mods must be listed here by id to be compatible.
      */
     std::vector<std::string> valid_mods;
+
+    bool was_loaded = false;
+
+    void load( const JsonObject &jo );
+    void deserialize( JsonIn &jsin );
 };
 
 struct islot_pet_armor {
@@ -294,6 +299,11 @@ struct islot_pet_armor {
      * Whether this is a power armor item.
      */
     bool power_armor = false;
+
+    bool was_loaded = false;
+
+    void load( const JsonObject &jo );
+    void deserialize( JsonIn &jsin );
 };
 
 struct islot_book {
@@ -359,6 +369,11 @@ struct islot_book {
     };
     using recipe_list_t = std::set<recipe_with_description_t>;
     recipe_list_t recipes;
+
+    bool was_loaded = false;
+
+    void load( const JsonObject &jo );
+    void deserialize( JsonIn &jsin );
 };
 
 struct islot_mod {
@@ -708,7 +723,7 @@ struct islot_ammo : common_ranged_data {
      */
     cata::optional<bool> force_stat_display;
 
-    bool was_loaded;
+    bool was_loaded = false;
 
     void load( const JsonObject &jo );
     void deserialize( JsonIn &jsin );
@@ -730,6 +745,12 @@ struct islot_bionic {
 };
 
 struct islot_seed {
+    // Generic factory stuff
+    bool was_loaded = false;
+
+    void load( const JsonObject &jo );
+    void deserialize( JsonIn &jsin );
+
     /**
      * Time it takes for a seed to grow (based of off a season length of 91 days).
      */
@@ -822,39 +843,6 @@ struct itype {
         cata::value_ptr<relic> relic_data;
         /*@}*/
 
-    private:
-        /** Can item be combined with other identical items? */
-        bool stackable_ = false;
-
-        /** Minimum and maximum amount of damage to an item (state of maximum repair). */
-        // TODO: create and use a MinMax class or similar to put both values into one object.
-        /// @{
-        int damage_min_ = -1000;
-        int damage_max_ = +4000;
-        /// @}
-
-    protected:
-        std::string id = "null"; /** unique string identifier for this type */
-
-        // private because is should only be accessed through itype::nname!
-        // nname() is used for display purposes
-        translation name = no_translation( "none" );
-
-    public:
-        itype() {
-            melee.fill( 0 );
-        }
-
-        int damage_min() const {
-            return count_by_charges() ? 0 : damage_min_;
-        }
-        int damage_max() const {
-            return count_by_charges() ? 0 : damage_max_;
-        }
-
-        // used for generic_factory for copy-from
-        bool was_loaded = false;
-
         // a hint for tilesets: if it doesn't have a tile, what does it look like?
         std::string looks_like;
 
@@ -936,6 +924,11 @@ struct itype {
          */
         units::volume integral_volume = -1_ml;
 
+        /**
+         * How long the longest side of this item is. If undefined, calculated from volume instead.
+         */
+        units::length longest_side = -1_mm;
+
         /** Number of items per above volume for @ref count_by_charges items */
         int stack_size = 0;
 
@@ -992,6 +985,39 @@ struct itype {
          * Efficiency of solar energy conversion for solarpacks.
          */
         float solar_efficiency = 0;
+
+        // used for generic_factory for copy-from
+        bool was_loaded = false;
+
+    private:
+        /** Can item be combined with other identical items? */
+        bool stackable_ = false;
+
+        /** Minimum and maximum amount of damage to an item (state of maximum repair). */
+        // TODO: create and use a MinMax class or similar to put both values into one object.
+        /// @{
+        int damage_min_ = -1000;
+        int damage_max_ = +4000;
+        /// @}
+
+    protected:
+        std::string id = "null"; /** unique string identifier for this type */
+
+        // private because is should only be accessed through itype::nname!
+        // nname() is used for display purposes
+        translation name = no_translation( "none" );
+
+    public:
+        itype() {
+            melee.fill( 0 );
+        }
+
+        int damage_min() const {
+            return count_by_charges() ? 0 : damage_min_;
+        }
+        int damage_max() const {
+            return count_by_charges() ? 0 : damage_max_;
+        }
 
         std::string get_item_type_string() const {
             if( tool ) {
