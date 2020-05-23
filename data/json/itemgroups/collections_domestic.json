@@ -242,6 +242,7 @@
     "items": [
       [ "alarmclock", 60 ],
       [ "glasses_reading", 50 ],
+      [ "glasses_eye", 30 ],
       [ "novel_drama", 50 ],
       [ "novel_romance", 40 ],
       [ "novel_mystery", 40 ],
@@ -458,6 +459,7 @@
       { "group": "kitchen_appliances", "prob": 253 },
       { "item": "hat_chef", "prob": 2 },
       { "item": "jacket_chef", "prob": 2 },
+      { "item": "gloves_cut_resistant", "prob": 1 },
       { "item": "pot", "prob": 25 },
       { "item": "sponge", "prob": 30 },
       { "item": "pot_copper", "prob": 15 },

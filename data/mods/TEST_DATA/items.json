@@ -263,10 +263,13 @@
       { "flame": false, "type": "cauterize" }
     ],
     "flags": [ "SPEAR", "BELT_CLIP", "ALLOWS_REMOTE_USE" ],
-    "magazines": [
-      [
-        "battery",
-        [
+    "pocket_data": [
+      {
+        "pocket_type": "MAGAZINE_WELL",
+        "holster": true,
+        "max_contains_volume": "20 L",
+        "max_contains_weight": "20 kg",
+        "item_restriction": [
           "light_minus_battery_cell",
           "light_battery_cell",
           "light_plus_battery_cell",
@@ -275,7 +278,7 @@
           "light_minus_disposable_cell",
           "light_disposable_cell"
         ]
-      ]
+      }
     ]
   },
   {
@@ -399,7 +402,8 @@
       "target": "compbow_high",
       "qualities_needed": { "SCREW_FINE": 1 },
       "msg": "You tighten the limbs, increasing the strength of the bow."
-    }
+    },
+    "pocket_data": [ { "pocket_type": "MAGAZINE", "ammo_restriction": { "arrow": 1 } } ]
   },
   {
     "type": "COMESTIBLE",
@@ -472,6 +476,7 @@
     "covers": [ "TORSO" ],
     "coverage": 30,
     "encumbrance": 2,
+    "max_encumbrance": 15,
     "pocket_data": [ { "pocket_type": "CONTAINER", "max_contains_volume": "15 L", "max_contains_weight": "30 kg", "moves": 300 } ],
     "warmth": 6,
     "material_thickness": 2,
@@ -495,7 +500,15 @@
     "covers": [ "ARM_EITHER", "HAND_EITHER" ],
     "coverage": 10,
     "encumbrance": 30,
-    "pocket_data": [ { "pocket_type": "CONTAINER", "max_contains_volume": "15 L", "max_contains_weight": "30 kg", "moves": 300 } ],
+    "pocket_data": [
+      {
+        "pocket_type": "CONTAINER",
+        "max_contains_volume": "15 L",
+        "max_contains_weight": "30 kg",
+        "moves": 300,
+        "rigid": true
+      }
+    ],
     "material_thickness": 2,
     "flags": [ "FANCY", "OVERSIZE", "BELTED", "RESTRICT_HANDS", "WATER_FRIENDLY" ]
   },

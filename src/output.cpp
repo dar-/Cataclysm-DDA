@@ -949,7 +949,8 @@ input_event draw_item_info( const std::function<catacurses::window()> &init_wind
     }
 
     std::string action;
-    do {
+    bool exit = false;
+    while( !exit ) {
         ui_manager::redraw();
         action = ctxt.handle_input();
         if( data.handle_scrolling && action == "PAGE_UP" ) {
@@ -961,8 +962,12 @@ input_event draw_item_info( const std::function<catacurses::window()> &init_wind
                 ( height > 0 && static_cast<size_t>( *data.ptr_selected + height ) < folded.size() ) ) {
                 ++*data.ptr_selected;
             }
+        } else if( action == "CONFIRM" || action == "QUIT" ) {
+            exit = true;
+        } else if( data.any_input && action == "ANY_INPUT" && !ctxt.get_raw_input().sequence.empty() ) {
+            exit = true;
         }
-    } while( action != "QUIT" && action != "CONFIRM" && action != "ANY_INPUT" );
+    }
 
     return ctxt.get_raw_input();
 }
@@ -1656,19 +1661,19 @@ void replace_name_tags( std::string &input )
 {
     // these need to replace each tag with a new randomly generated name
     while( input.find( "<full_name>" ) != std::string::npos ) {
-        replace_substring( input, "<full_name>", Name::get( nameIsFullName ),
+        replace_substring( input, "<full_name>", Name::get( nameFlags::IsFullName ),
                            false );
     }
     while( input.find( "<family_name>" ) != std::string::npos ) {
-        replace_substring( input, "<family_name>", Name::get( nameIsFamilyName ),
+        replace_substring( input, "<family_name>", Name::get( nameFlags::IsFamilyName ),
                            false );
     }
     while( input.find( "<given_name>" ) != std::string::npos ) {
-        replace_substring( input, "<given_name>", Name::get( nameIsGivenName ),
+        replace_substring( input, "<given_name>", Name::get( nameFlags::IsGivenName ),
                            false );
     }
     while( input.find( "<town_name>" ) != std::string::npos ) {
-        replace_substring( input, "<town_name>", Name::get( nameIsTownName ),
+        replace_substring( input, "<town_name>", Name::get( nameFlags::IsTownName ),
                            false );
     }
 }

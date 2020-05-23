@@ -499,6 +499,7 @@ This section describes each json file and their contents. Each json has their ow
 | stat_bonus                  | (_optional_) List of passive stat bonus. Stat are designated as follow: "DEX", "INT", "STR", "PER".
 | enchantments                | (_optional_) List of enchantments applied by this CBM (see MAGIC.md for instructions on enchantment. NB: enchantments are not necessarily magic.)
 | learned_spells              | (_optional_) Map of {spell:level} you gain when installing this CBM, and lose when you uninstall this CBM. Spell classes are automatically gained.
+| installation_requirement    | (_optional_) Requirment id pointing to a requirment defining the tools and componentsnt necessary to install this CBM.
 
 ```C++
 {
@@ -514,6 +515,7 @@ This section describes each json file and their contents. Each json has their ow
     "encumbrance"  : [ [ "TORSO", 10 ], [ "ARM_L", 10 ], [ "ARM_R", 10 ], [ "LEG_L", 10 ], [ "LEG_R", 10 ], [ "FOOT_L", 10 ], [ "FOOT_R", 10 ] ],
     "description"  : "You have a battery draining attachment, and thus can make use of the energy contained in normal, everyday batteries. Use 'E' to consume batteries.",
     "canceled_mutations": ["HYPEROPIC"],
+    "installation_requirement": "sewing_standard",
     "included_bionics": ["bio_blindfold"]
 },
 {
@@ -962,7 +964,7 @@ player will start with this as a nearby vehicle.
 
 A list of flags. TODO: document those flags here.
 
-- ```NO_BONUS_ITEMS``` Prevent bonus items (such as inhalers with the ASTHMA trait) from being given to this profession 
+- ```NO_BONUS_ITEMS``` Prevent bonus items (such as inhalers with the ASTHMA trait) from being given to this profession
 
 Mods can modify this via `add:flags` and `remove:flags`.
 
@@ -1680,7 +1682,7 @@ Armor can be defined like this:
 "warmth" : 10,        //  (Optional, default = 0) How much warmth clothing provides
 "environmental_protection" : 0,  //  (Optional, default = 0) How much environmental protection it affords
 "encumbrance" : 0,    // Base encumbrance (unfitted value)
-"max_encumbrance" : 0,    // When a character is completely full of volume, the encumbrance of a non-rigid storage container will be set to this. Otherwise it'll be between the encumbrance and max_encumbrance following the equation: encumbrance + (max_encumbrance - encumbrance) * character volume.
+"max_encumbrance" : 0,    // When a character is completely full of volume, the encumbrance of a non-rigid storage container will be set to this. Otherwise it'll be between the encumbrance and max_encumbrance following the equation: encumbrance + (max_encumbrance - encumbrance) * non-rigid volume / non-rigid capacity.  By default, max_encumbrance is encumbrance + (non-rigid volume / 250ml).
 "weight_capacity_bonus": "20 kg",    // (Optional, default = 0) Bonus to weight carrying capacity, can be negative. Strings must be used - "5000 g" or "5 kg"
 "weight_capacity_modifier": 1.5, // (Optional, default = 1) Factor modifying base weight carrying capacity.
 "coverage" : 80,      // What percentage of body part
@@ -1892,7 +1894,7 @@ Any Item can be a container. To add the ability to contain things to an item, yo
     "moves": 100,                             // Indicates the number of moves it takes to remove an item from this pocket, assuming best conditions.
     "fire_protection": false,                 // If the pocket protects the contained items from exploding in a fire or not.  This is for protecting ammo from exploding if the container is tossed into a fire.
     "watertight": false,                      // can contain liquid
-    "gastight": false,                        // can contain gas
+    "airtight": false,                        // can contain gas
     "open_container": false,                  // Default is false. If true, the contents of this pocket will spill if this item is placed into another item.
     "flag_restriction": [ "FLAG1", "FLAG2" ], // items can only be placed into this pocket if they have a flag that matches one of these flags.
     "rigid": false,                           // Default is false. If false, this pocket's contents contribute to this item's size. If true, they do not.  Think glass jar vs plastic bag: a plastic bag containing nothing takes up almost no space, whereas a glass jar containing nothing takes up as much space as a completely full glass jar. The property magazine_well only works if rigid is false.
@@ -2292,7 +2294,7 @@ The contents of use_action fields can either be a string indicating a built-in f
     "type" : "consume_drug", // A drug the player can consume.
     "activation_message" : "You smoke your crack rocks.  Mother would be proud.", // Message, ayup.
     "effects" : { "high": 15 }, // Effects and their duration.
-    "damage_over_time": [ 
+    "damage_over_time": [
         {
           "damage_type": "true", // Type of damage
           "duration": "1 m", // For how long this damage will be applied
@@ -2313,8 +2315,7 @@ The contents of use_action fields can either be a string indicating a built-in f
     "hostile_msg": "It's hostile!", // (optional) message when programming the monster failed and it's hostile.
     "friendly_msg": "Good!", // (optional) message when the monster is programmed properly and it's friendly.
     "place_randomly": true, // if true: places the monster randomly around the player, if false: let the player decide where to put it (default: false)
-    "skill1": "throw", // Id of a skill, higher skill level means more likely to place a friendly monster.
-    "skill2": "unarmed", // Another id, just like the skill1. Both entries are optional.
+    "skills": [ "unarmed", "throw" ], // (optional) array of skill IDs. Higher skill level means more likely to place a friendly monster.
     "moves": 60 // how many move points the action takes.
 },
 "use_action": {
@@ -2385,9 +2386,6 @@ The contents of use_action fields can either be a string indicating a built-in f
 "use_action": {
     "type": "cauterize", // Cauterize the character.
     "flame": true // If true, the character needs 4 charges of fire (e.g. from a lighter) to do this action, if false, the charges of the item itself are used.
-},
-"use_action": {
-    "type": "enzlave" // Make a zlave.
 },
 "use_action": {
     "type": "fireweapon_off", // Activate a fire based weapon.
@@ -2950,7 +2948,7 @@ A flat multiplier on the harvest count of the plant. For numbers greater than on
 
 ### clothing_mod
 
-```JSON
+```C++
 "type": "clothing_mod",
 "id": "leather_padded",   // Unique ID.
 "flag": "leather_padded", // flag to add to clothing.
@@ -3317,11 +3315,15 @@ The internal ID of the compatible tilesets. MOD tileset is only applied when bas
 Setting of sprite sheets. Same as `tiles-new` field in `tile_config`. Sprite files are loaded from the same folder json file exists.
 
 # Field types
-
+```C++
   {
     "type": "field_type", // this is a field type
     "id": "fd_gum_web", // id of the field
     "immune_mtypes": [ "mon_spider_gum" ], // list of monster immune to this field
+    "intensity_levels": [ 
+      { "name": "shadow",  // name of this level of intensity
+        "light_override": 3.7 } //light level on the tile occupied by this field will be set at 3.7 not matter the ambient light.
+     ],
     "bash": {
       "str_min": 1, // lower bracket of bashing damage required to bash
       "str_max": 3, // higher bracket
@@ -3340,3 +3342,4 @@ Setting of sprite sheets. Same as `tiles-new` field in `tile_config`. Sprite fil
       ]
     }
   }
+```

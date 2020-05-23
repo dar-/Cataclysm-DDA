@@ -23,8 +23,6 @@ class JsonObject;
 class JsonOut;
 class player;
 
-using itype_id = std::string;
-
 struct bionic_data {
     bionic_data();
 
@@ -97,7 +95,7 @@ struct bionic_data {
      * Fake item created for crafting with this bionic available.
      * Also the item used for gun bionics.
      */
-    std::string fake_item;
+    itype_id fake_item;
     /**
      * Mutations/trait that are removed upon installing this CBM.
      * E.g. enhanced optic bionic may cancel HYPEROPIC trait.
@@ -126,8 +124,13 @@ struct bionic_data {
      */
     std::set<bionic_id> available_upgrades;
 
+    /**Requirement to bionic installation*/
+    requirement_id installation_requirement;
+
     cata::flat_set<std::string> flags;
     bool has_flag( const std::string &flag ) const;
+
+    itype_id itype() const;
 
     bool is_included( const bionic_id &id ) const;
 
@@ -144,7 +147,7 @@ struct bionic {
         char        invlet  = 'a';
         bool        powered = false;
         /* Ammunition actually loaded in this bionic gun in deactivated state */
-        itype_id    ammo_loaded = "null";
+        itype_id    ammo_loaded = itype_id::NULL_ID();
         /* Ammount of ammo actually held inside by this bionic gun in deactivated state */
         unsigned int         ammo_count = 0;
         /* An amount of time during which this bionic has been rendered inoperative. */
@@ -196,6 +199,7 @@ char get_free_invlet( player &p );
 std::string list_occupied_bps( const bionic_id &bio_id, const std::string &intro,
                                bool each_bp_on_new_line = true );
 
+int bionic_success_chance( bool autodoc, int skill_level, int difficulty, const Character &target );
 int bionic_manip_cos( float adjusted_skill, int bionic_difficulty );
 
 std::vector<bionic_id> bionics_cancelling_trait( const std::vector<bionic_id> &bios,

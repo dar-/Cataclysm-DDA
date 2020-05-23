@@ -59,7 +59,6 @@ enum monster_attitude {
     MATT_IGNORE,
     MATT_FOLLOW,
     MATT_ATTACK,
-    MATT_ZLAVE,
     NUM_MONSTER_ATTITUDES
 };
 
@@ -501,7 +500,7 @@ class monster : public Creature
         int staircount;
 
         // Ammunition if we use a gun.
-        std::map<std::string, int> ammo;
+        std::map<itype_id, int> ammo;
 
         /**
          * Convert this monster into an item (see @ref mtype::revert_to_itype).
