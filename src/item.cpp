@@ -838,18 +838,18 @@ bool item::is_worn_only_with( const item &it ) const
     return is_power_armor() && it.is_power_armor() && it.covers( bp_torso );
 }
 
-item item::in_its_container() const
+item item::in_its_container( int qty ) const
 {
-    return in_container( type->default_container.value_or( "null" ) );
+    return in_container( type->default_container.value_or( "null" ), qty );
 }
 
-item item::in_container( const itype_id &cont ) const
+item item::in_container( const itype_id &cont, int qty ) const
 {
     if( !cont.is_null() ) {
         item ret( cont, birthday() );
         if( ret.has_pockets() ) {
             if( count_by_charges() ) {
-                ret.fill_with( *type, charges );
+                ret.fill_with( *type, qty );
             } else {
                 ret.put_in( *this, item_pocket::pocket_type::CONTAINER );
             }
@@ -1498,22 +1498,11 @@ void item::basic_info( std::vector<iteminfo> &info, const iteminfo_query *parts,
         }
     }
     if( parts->test( iteminfo_parts::BASE_VOLUME ) ) {
-        int converted_volume_scale = 0;
-        const double converted_volume = round_up( convert_volume( volume().value(),
-                                        &converted_volume_scale ) * batch, 3 );
-        iteminfo::flags f = iteminfo::lower_is_better | iteminfo::no_newline;
-        if( converted_volume_scale != 0 ) {
-            f |= iteminfo::is_three_decimal;
-        }
-        info.push_back( iteminfo( "BASE", _( "Volume: " ),
-                                  string_format( "<num> %s", volume_units_abbr() ),
-                                  f, converted_volume ) );
+        info.push_back( vol_to_info( "BASE", _( "Volume: " ), volume() * batch, 3 ) );
     }
     if( parts->test( iteminfo_parts::BASE_WEIGHT ) ) {
-        info.push_back( iteminfo( "BASE", space + _( "Weight: " ),
-                                  string_format( "<num> %s", weight_units() ),
-                                  iteminfo::lower_is_better | iteminfo::is_decimal,
-                                  convert_weight( weight() ) * batch ) );
+        info.push_back( weight_to_info( "BASE", space + _( "Weight: " ), weight() * batch ) );
+        info.back().bNewLine = true;
     }
     if( parts->test( iteminfo_parts::BASE_LENGTH ) && length() > 0_mm ) {
         info.push_back( iteminfo( "BASE", _( "Length: " ),
@@ -2022,6 +2011,8 @@ void item::gun_info( const item *mod, std::vector<iteminfo> &info, const iteminf
                                string_format( "<stat>%s</stat>",
                                               curammo->nname( 1 ) ) );
         }
+    } else {
+        curammo = loaded_mod->ammo_data();
     }
 
     if( parts->test( iteminfo_parts::GUN_DAMAGE ) ) {
@@ -3419,18 +3410,8 @@ void item::contents_info( std::vector<iteminfo> &info, const iteminfo_query *par
 
             if( contents_item->made_of_from_type( LIQUID ) ) {
                 units::volume contents_volume = contents_item->volume() * batch;
-                int converted_volume_scale = 0;
-                const double converted_volume =
-                    round_up( convert_volume( contents_volume.value(),
-                                              &converted_volume_scale ), 2 );
                 info.emplace_back( "DESCRIPTION", contents_item->display_name() );
-                iteminfo::flags f = iteminfo::no_newline;
-                if( converted_volume_scale != 0 ) {
-                    f |= iteminfo::is_decimal;
-                }
-                info.emplace_back( "CONTAINER", description + space,
-                                   string_format( "<num> %s", volume_units_abbr() ), f,
-                                   converted_volume );
+                info.emplace_back( vol_to_info( "CONTAINER", description + space, contents_volume ) );
             } else {
                 info.emplace_back( "DESCRIPTION", contents_item->display_name() );
                 info.emplace_back( "DESCRIPTION", description.translated() );
@@ -7906,7 +7887,7 @@ int item::getlight_emit() const
 {
     float lumint = type->light_emission;
 
-    if( lumint == 0 ) {
+    if( lumint == 0 || ammo_remaining() == 0 ) {
         return 0;
     }
     if( has_flag( flag_CHARGEDIM ) && is_tool() && !has_flag( flag_USE_UPS ) ) {
@@ -8350,13 +8331,12 @@ iteminfo::iteminfo( const std::string &Type, const std::string &Name, double Val
 }
 
 iteminfo vol_to_info( const std::string &type, const std::string &left,
-                      const units::volume &vol )
+                      const units::volume &vol, int decimal_places )
 {
     iteminfo::flags f = iteminfo::lower_is_better | iteminfo::no_newline;
     int converted_volume_scale = 0;
     const double converted_volume =
-        convert_volume( vol.value(),
-                        &converted_volume_scale );
+        round_up( convert_volume( vol.value(), &converted_volume_scale ), decimal_places );
     if( converted_volume_scale != 0 ) {
         f |= iteminfo::is_decimal;
     }
@@ -8365,12 +8345,12 @@ iteminfo vol_to_info( const std::string &type, const std::string &left,
 }
 
 iteminfo weight_to_info( const std::string &type, const std::string &left,
-                         const units::mass &weight )
+                         const units::mass &weight, int /* decimal_places */ )
 {
     iteminfo::flags f = iteminfo::lower_is_better | iteminfo::no_newline;
     const double converted_weight = convert_weight( weight );
     f |= iteminfo::is_decimal;
-    return iteminfo( type, left, string_format( "<num> %s", volume_units_abbr() ), f,
+    return iteminfo( type, left, string_format( "<num> %s", weight_units() ), f,
                      converted_weight );
 }
 

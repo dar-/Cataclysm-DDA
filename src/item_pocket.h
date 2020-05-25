@@ -76,8 +76,10 @@ class item_pocket
         bool empty() const;
         bool full( bool allow_bucket ) const;
 
+        // Convenience accessors for pocket data attributes with the same name
         bool rigid() const;
         bool watertight() const;
+        bool airtight() const;
 
         // is this pocket one of the standard types?
         // exceptions are MOD, CORPSE, SOFTWARE, MIGRATION, etc.
@@ -104,6 +106,7 @@ class item_pocket
         // how many more of @it can this pocket hold?
         int remaining_capacity_for_item( const item &it ) const;
         units::volume volume_capacity() const;
+        units::mass weight_capacity() const;
         // The largest volume of contents this pocket can have.  Different from
         // volume_capacity because that doesn't take into account ammo containers.
         units::volume max_contains_volume() const;

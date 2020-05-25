@@ -153,9 +153,9 @@ struct iteminfo {
 };
 
 iteminfo vol_to_info( const std::string &type, const std::string &left,
-                      const units::volume &vol );
+                      const units::volume &vol, int decimal_places = 2 );
 iteminfo weight_to_info( const std::string &type, const std::string &left,
-                         const units::mass &weight );
+                         const units::mass &weight, int decimal_places = 2 );
 
 inline iteminfo::flags operator|( iteminfo::flags l, iteminfo::flags r )
 {
@@ -730,8 +730,8 @@ class item : public visitable<item>
          * Returns this item into its default container. If it does not have a default container,
          * returns this. It's intended to be used like \code newitem = newitem.in_its_container();\endcode
          */
-        item in_its_container() const;
-        item in_container( const itype_id &container_type ) const;
+        item in_its_container( int qty = INFINITE_CHARGES ) const;
+        item in_container( const itype_id &container_type, int qty = INFINITE_CHARGES ) const;
 
         bool item_has_uses_recursive() const;
 
