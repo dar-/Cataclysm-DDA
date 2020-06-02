@@ -38,6 +38,28 @@ std::string enum_to_string<item_pocket::pocket_type>( item_pocket::pocket_type d
 // *INDENT-ON*
 } // namespace io
 
+std::string pocket_data::check_definition() const
+{
+    if( type == item_pocket::pocket_type::MOD ||
+        type == item_pocket::pocket_type::CORPSE ||
+        type == item_pocket::pocket_type::MIGRATION ) {
+        return "";
+    }
+    if( magazine_well > 0_ml && rigid ) {
+        return "rigid overrides magazine_well\n";
+    }
+    if( magazine_well >= max_contains_volume() ) {
+        return "magazine well larger than pocket volume.  consider using rigid instead.\n";
+    }
+    if( max_item_volume && *max_item_volume < min_item_volume ) {
+        return "max_item_volume is greater than min_item_volume.  no item can fit.\n";
+    }
+    if( ( watertight || airtight ) && min_item_volume > 0_ml ) {
+        return "watertight or gastight is incompatible with min_item_volume\n";
+    }
+    return "";
+}
+
 void pocket_data::load( const JsonObject &jo )
 {
     optional( jo, was_loaded, "pocket_type", type, item_pocket::pocket_type::CONTAINER );
@@ -163,7 +185,7 @@ bool item_pocket::better_pocket( const item_pocket &rhs, const item &it ) const
         // a lower spoil multiplier is better
         return rhs.spoil_multiplier() < spoil_multiplier();
     }
-    if( it.made_of( SOLID ) ) {
+    if( it.made_of( phase_id::SOLID ) ) {
         if( data->watertight != rhs.data->watertight ) {
             return !rhs.data->watertight;
         }
@@ -293,6 +315,11 @@ size_t item_pocket::size() const
 units::volume item_pocket::volume_capacity() const
 {
     return data->volume_capacity;
+}
+
+units::volume item_pocket::magazine_well() const
+{
+    return data->magazine_well;
 }
 
 units::mass item_pocket::weight_capacity() const
@@ -463,7 +490,7 @@ void item_pocket::casings_handle( const std::function<bool( item & )> &func )
 void item_pocket::handle_liquid_or_spill( Character &guy )
 {
     for( auto iter = contents.begin(); iter != contents.end(); ) {
-        if( iter->made_of( LIQUID ) ) {
+        if( iter->made_of( phase_id::LIQUID ) ) {
             item liquid( *iter );
             iter = contents.erase( iter );
             liquid_handler::handle_all_liquid( liquid, 1 );
@@ -753,7 +780,7 @@ void item_pocket::contents_info( std::vector<iteminfo> &info, int pocket_number,
 
             const translation &description = contents_item.type->description;
 
-            if( contents_item.made_of_from_type( LIQUID ) ) {
+            if( contents_item.made_of_from_type( phase_id::LIQUID ) ) {
                 info.emplace_back( "DESCRIPTION", contents_item.display_name() );
                 info.emplace_back( vol_to_info( "CONTAINER", description + space,
                                                 contents_item.volume() ) );
@@ -866,7 +893,7 @@ ret_val<item_pocket::contain_code> item_pocket::can_contain( const item &it ) co
 
     // liquids and gases avoid the size limit altogether
     // soft items also avoid the size limit
-    if( !it.made_of( LIQUID ) && !it.made_of( GAS ) &&
+    if( !it.made_of( phase_id::LIQUID ) && !it.made_of( phase_id::GAS ) &&
         !it.is_soft() && data->max_item_volume &&
         it.volume() > *data->max_item_volume ) {
         return ret_val<item_pocket::contain_code>::make_failure(
@@ -1173,7 +1200,8 @@ bool item_pocket::can_unload_liquid() const
     }
 
     const item &cts = contents.front();
-    bool cts_is_frozen_liquid = cts.made_of_from_type( LIQUID ) && cts.made_of( SOLID );
+    bool cts_is_frozen_liquid = cts.made_of_from_type( phase_id::LIQUID ) &&
+                                cts.made_of( phase_id::SOLID );
     return will_spill() || !cts_is_frozen_liquid;
 }
 

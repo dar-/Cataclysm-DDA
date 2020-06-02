@@ -73,6 +73,21 @@ bool item_contents::full( bool allow_bucket ) const
     return true;
 }
 
+bool item_contents::bigger_on_the_inside( const units::volume &container_volume ) const
+{
+    units::volume min_logical_volume = 0_ml;
+    for( const item_pocket &pocket : contents ) {
+        if( pocket.is_type( item_pocket::pocket_type::CONTAINER ) ) {
+            if( pocket.rigid() ) {
+                min_logical_volume += pocket.max_contains_volume();
+            } else {
+                min_logical_volume += pocket.magazine_well();
+            }
+        }
+    }
+    return container_volume < min_logical_volume;
+}
+
 size_t item_contents::size() const
 {
     return contents.size();
@@ -765,7 +780,6 @@ std::vector<const item *> item_contents::gunmods() const
     return mods;
 }
 
-
 std::set<itype_id> item_contents::magazine_compatible() const
 {
     std::set<itype_id> ret;
@@ -974,7 +988,6 @@ void item_contents::info( std::vector<iteminfo> &info, const iteminfo_query *par
                                             total_container_weight_capacity() ) );
             info.back().bNewLine = true;
         }
-
 
         int idx = 0;
         for( const item_pocket &pocket : found_pockets ) {

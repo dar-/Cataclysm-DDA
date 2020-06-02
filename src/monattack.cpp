@@ -119,7 +119,7 @@ static const efftype_id effect_stunned( "stunned" );
 static const efftype_id effect_taint( "taint" );
 static const efftype_id effect_targeted( "targeted" );
 static const efftype_id effect_tindrift( "tindrift" );
-static const efftype_id effect_under_op( "under_operation" );
+static const efftype_id effect_under_operation( "under_operation" );
 
 static const itype_id itype_ant_egg( "ant_egg" );
 static const itype_id itype_badge_cybercop( "badge_cybercop" );
@@ -148,8 +148,8 @@ static const skill_id skill_rifle( "rifle" );
 static const skill_id skill_unarmed( "unarmed" );
 
 static const species_id species_BLOB( "BLOB" );
-static const species_id LEECH_PLANT( "LEECH_PLANT" );
-static const species_id ZOMBIE( "ZOMBIE" );
+static const species_id species_LEECH_PLANT( "LEECH_PLANT" );
+static const species_id species_ZOMBIE( "ZOMBIE" );
 
 static const std::string flag_AUTODOC_COUCH( "AUTODOC_COUCH" );
 
@@ -179,7 +179,7 @@ static const mtype_id mon_breather( "mon_breather" );
 static const mtype_id mon_breather_hub( "mon_breather_hub" );
 static const mtype_id mon_creeper_hub( "mon_creeper_hub" );
 static const mtype_id mon_creeper_vine( "mon_creeper_vine" );
-static const mtype_id mon_defective_robot_nurse( "mon_nursebot_defective" );
+static const mtype_id mon_nursebot_defective( "mon_nursebot_defective" );
 static const mtype_id mon_dermatik( "mon_dermatik" );
 static const mtype_id mon_fungal_hedgerow( "mon_fungal_hedgerow" );
 static const mtype_id mon_fungal_tendril( "mon_fungal_tendril" );
@@ -323,12 +323,18 @@ bool mattack::none( monster * )
 
 bool mattack::eat_crop( monster *z )
 {
+    cata::optional<tripoint> target;
+    int num_targets = 1;
     for( const auto &p : g->m.points_in_radius( z->pos(), 1 ) ) {
-        if( g->m.has_flag( "PLANT", p ) && one_in( 4 ) ) {
-            g->m.furn_set( p, furn_str_id( g->m.furn( p )->plant->base ) );
-            g->m.i_clear( p );
-            return true;
+        if( g->m.has_flag( "PLANT", p ) && one_in( num_targets ) ) {
+            num_targets++;
+            target = p;
         }
+    }
+    if( target ) {
+        g->m.furn_set( *target, furn_str_id( g->m.furn( *target )->plant->base ) );
+        g->m.i_clear( *target );
+        return true;
     }
     return true;
 }
@@ -965,7 +971,7 @@ bool mattack::resurrect( monster *z )
         for( auto &i : g->m.i_at( p ) ) {
             const mtype *mt = i.get_mtype();
             if( !( i.is_corpse() && i.can_revive() && i.active && mt->has_flag( MF_REVIVES ) &&
-                   mt->in_species( ZOMBIE ) && !mt->has_flag( MF_NO_NECRO ) ) ) {
+                   mt->in_species( species_ZOMBIE ) && !mt->has_flag( MF_NO_NECRO ) ) ) {
                 continue;
             }
 
@@ -1006,7 +1012,8 @@ bool mattack::resurrect( monster *z )
         // Check to see if there are any nearby living zombies to see if we should get angry
         const bool allies = g->get_creature_if( [&]( const Creature & critter ) {
             const monster *const zed = dynamic_cast<const monster *>( &critter );
-            return zed && zed != z && zed->type->has_flag( MF_REVIVES ) && zed->type->in_species( ZOMBIE ) &&
+            return zed && zed != z && zed->type->has_flag( MF_REVIVES ) &&
+                   zed->type->in_species( species_ZOMBIE ) &&
                    z->attitude_to( *zed ) == Creature::Attitude::A_FRIENDLY  &&
                    within_target_range( z, zed, 10 );
         } );
@@ -2288,21 +2295,21 @@ static bool blobify( monster &blob, monster &target )
     }
 
     switch( target.get_size() ) {
-        case MS_TINY:
+        case creature_size::tiny:
             // Just consume it
             target.set_hp( 0 );
             blob.set_speed_base( blob.get_speed_base() + 5 );
             return false;
-        case MS_SMALL:
+        case creature_size::small:
             target.poly( mon_blob_small );
             break;
-        case MS_MEDIUM:
+        case creature_size::medium:
             target.poly( mon_blob );
             break;
-        case MS_LARGE:
+        case creature_size::large:
             target.poly( mon_blob_large );
             break;
-        case MS_HUGE:
+        case creature_size::huge:
             // No polymorphing huge stuff
             target.add_effect( effect_slimed, rng( 2_turns, 10_turns ) );
             break;
@@ -2445,7 +2452,7 @@ bool mattack::jackson( monster *z )
     std::list<monster *> allies;
     std::vector<tripoint> nearby_points = closest_tripoints_first( z->pos(), 3 );
     for( monster &candidate : g->all_monsters() ) {
-        if( candidate.type->in_species( ZOMBIE ) && candidate.type->id != mon_zombie_jackson ) {
+        if( candidate.type->in_species( species_ZOMBIE ) && candidate.type->id != mon_zombie_jackson ) {
             // Just give the allies consistent assignments.
             // Don't worry about trying to make the orders optimal.
             allies.push_back( &candidate );
@@ -2760,7 +2767,7 @@ bool mattack::grab_drag( monster *z )
         return false;
     }
 
-    if( target->has_effect( effect_under_op ) ) {
+    if( target->has_effect( effect_under_operation ) ) {
         target->add_msg_player_or_npc( m_good,
                                        _( "The %s tries to drag you, but you're securely fastened in the autodoc." ),
                                        _( "The %s tries to drag <npcname>, but they're securely fastened in the autodoc." ), z->name() );
@@ -3081,7 +3088,7 @@ bool mattack::nurse_operate( monster *z )
             for( auto critter : g->m.get_creatures_in_radius( target->pos(), 1 ) ) {
                 monster *mon = dynamic_cast<monster *>( critter );
                 if( mon != nullptr && mon != z ) {
-                    if( mon->type->id != mon_defective_robot_nurse ) {
+                    if( mon->type->id != mon_nursebot_defective ) {
                         sounds::sound( z->pos(), 8, sounds::sound_t::electronic_speech,
                                        string_format(
                                            _( "a soft robotic voice say, \"Unhand this patient immediately!  If you keep interfering with the procedure I'll be forced to call law enforcement.\"" ) ) );
@@ -4954,7 +4961,7 @@ bool mattack::leech_spawner( monster *z )
     const bool u_see = g->u.sees( *z );
     std::list<monster *> allies;
     for( monster &candidate : g->all_monsters() ) {
-        if( candidate.in_species( LEECH_PLANT ) && !candidate.has_flag( MF_IMMOBILE ) ) {
+        if( candidate.in_species( species_LEECH_PLANT ) && !candidate.has_flag( MF_IMMOBILE ) ) {
             allies.push_back( &candidate );
         }
     }
@@ -4987,7 +4994,7 @@ bool mattack::mon_leech_evolution( monster *z )
     const bool is_queen = z->has_flag( MF_QUEEN );
     std::list<monster *> queens;
     for( monster &candidate : g->all_monsters() ) {
-        if( candidate.in_species( LEECH_PLANT ) && candidate.has_flag( MF_QUEEN ) &&
+        if( candidate.in_species( species_LEECH_PLANT ) && candidate.has_flag( MF_QUEEN ) &&
             rl_dist( z->pos(), candidate.pos() ) < 35 ) {
             queens.push_back( &candidate );
         }
@@ -5023,8 +5030,8 @@ bool mattack::tindalos_teleport( monster *z )
         }
     }
     const int distance_to_target = rl_dist( z->pos(), target->pos() );
-    const tripoint oldpos = z->pos();
     if( distance_to_target > 5 ) {
+        const tripoint oldpos = z->pos();
         for( const tripoint &dest : g->m.points_in_radius( target->pos(), 4 ) ) {
             if( g->m.is_cornerfloor( dest ) ) {
                 if( g->is_empty( dest ) ) {
@@ -5541,7 +5548,6 @@ bool mattack::kamikaze( monster *z )
 struct grenade_helper_struct {
     std::string message;
     int chance = 1;
-    float ammo_percentage = 1;
 };
 
 // Returns 0 if this should be retired, 1 if it was successful, and -1 if something went horribly wrong
@@ -5563,34 +5569,21 @@ static int grenade_helper( monster *const z, Creature *const target, const int d
         return 0;
     }
 
-    int total_ammo = 0;
-    // Sum up the ammo entries to get a ratio.
-    for( const auto &ammo_entry : z->type->starting_ammo ) {
-        total_ammo += ammo_entry.second;
-    }
-    if( total_ammo == 0 ) {
-        // Should never happen, but protect us from a div/0 if it does.
-        return -1;
-    }
-
-    // Find how much ammo we currently have to get the total ratio
+    // Find how much ammo we currently have
     int curr_ammo = 0;
-    for( const auto &amm : z->ammo ) {
+    for( const std::pair<const itype_id, int> &amm : z->ammo ) {
         curr_ammo += amm.second;
     }
-    float rat = curr_ammo / static_cast<float>( total_ammo );
-
     if( curr_ammo == 0 ) {
         // We've run out of ammo, get angry and toggle the special off.
         z->anger = 100;
         return -1;
     }
 
-    // Hey look! another weighted list!
-    // Grab all attacks that pass their chance check and we've spent enough ammo for
+    // Grab all attacks that pass their chance check
     weighted_float_list<itype_id> possible_attacks;
-    for( const auto &amm : z->ammo ) {
-        if( amm.second > 0 && data[amm.first].ammo_percentage >= rat ) {
+    for( const std::pair<const itype_id, int> &amm : z->ammo ) {
+        if( amm.second > 0 ) {
             possible_attacks.add( amm.first, 1.0 / data[amm.first].chance );
         }
     }
@@ -5609,14 +5602,15 @@ static int grenade_helper( monster *const z, Creature *const target, const int d
     }
 
     // Get our monster type
-    auto bomb_type = item::find_type( att );
-    auto usage = bomb_type->get_use( "place_monster" );
+    const itype *bomb_type = item::find_type( att );
+    const use_function *usage = bomb_type->get_use( "place_monster" );
     if( usage == nullptr ) {
         // Invalid bomb item usage, Toggle this special off so we stop processing
         add_msg( m_debug, "Invalid bomb item usage in grenadier special for %s.", z->name() );
         return -1;
     }
-    auto *actor = dynamic_cast<const place_monster_iuse *>( usage->get_actor_ptr() );
+    const place_monster_iuse *actor = dynamic_cast<const place_monster_iuse *>
+                                      ( usage->get_actor_ptr() );
     if( actor == nullptr ) {
         // Invalid bomb item, Toggle this special off so we stop processing
         add_msg( m_debug, "Invalid bomb type in grenadier special for %s.", z->name() );
@@ -5676,12 +5670,10 @@ bool mattack::grenadier_elite( monster *const z )
     // C-4
     grenades[itype_bot_c4_hack].message = _( "The %s buzzes and deploys a C-4 hack!" );
     grenades[itype_bot_c4_hack].chance = 8;
-    grenades[itype_bot_c4_hack].ammo_percentage = .75;
     // Mininuke
     grenades[itype_bot_mininuke_hack].message =
         _( "A klaxon blares from %s as it deploys a mininuke hack!" );
     grenades[itype_bot_mininuke_hack].chance = 50;
-    grenades[itype_bot_mininuke_hack].ammo_percentage = .75;
 
     // Only can actively target the player right now. Once we have the ability to grab targets that we aren't
     // actively attacking change this to use that instead.

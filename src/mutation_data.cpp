@@ -260,7 +260,7 @@ void mutation_branch::load_trait( const JsonObject &jo, const std::string &src )
     trait_factory.load( jo, src );
 }
 
-mut_transform::mut_transform() : active( false ), moves( 0 ) {}
+mut_transform::mut_transform() = default;
 
 bool mut_transform::load( const JsonObject &jsobj, const std::string &member )
 {
@@ -368,6 +368,7 @@ void mutation_branch::load( const JsonObject &jo, const std::string & )
     optional( jo, was_loaded, "fatigue_modifier", fatigue_modifier, 0.0f );
     optional( jo, was_loaded, "fatigue_regen_modifier", fatigue_regen_modifier, 0.0f );
     optional( jo, was_loaded, "stamina_regen_modifier", stamina_regen_modifier, 0.0f );
+    optional( jo, was_loaded, "obtain_cost_multiplier", obtain_cost_multiplier, 1.0f );
     optional( jo, was_loaded, "overmap_sight", overmap_sight, 0.0f );
     optional( jo, was_loaded, "overmap_multiplier", overmap_multiplier, 1.0f );
     optional( jo, was_loaded, "map_memory_capacity_multiplier", map_memory_capacity_multiplier, 1.0f );

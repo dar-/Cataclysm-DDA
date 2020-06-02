@@ -74,7 +74,7 @@ static const efftype_id effect_visuals( "visuals" );
 
 static const item_category_id item_category_chems( "chems" );
 
-static const itype_id itype_apparatus( "dab_pen_on" );
+static const itype_id itype_apparatus( "apparatus" );
 static const itype_id itype_dab_pen_on( "dab_pen_on" );
 static const itype_id itype_syringe( "syringe" );
 
@@ -83,14 +83,11 @@ static const trait_id trait_AMORPHOUS( "AMORPHOUS" );
 static const trait_id trait_ANTIFRUIT( "ANTIFRUIT" );
 static const trait_id trait_ANTIJUNK( "ANTIJUNK" );
 static const trait_id trait_ANTIWHEAT( "ANTIWHEAT" );
-static const trait_id trait_BEAK_HUM( "BEAK_HUM" );
 static const trait_id trait_CANNIBAL( "CANNIBAL" );
-static const trait_id trait_STRICT_HUMANITARIAN( "STRICT_HUMANITARIAN" );
 static const trait_id trait_CARNIVORE( "CARNIVORE" );
 static const trait_id trait_EATDEAD( "EATDEAD" );
 static const trait_id trait_EATHEALTH( "EATHEALTH" );
 static const trait_id trait_EATPOISON( "EATPOISON" );
-static const trait_id trait_FANGS_SPIDER( "FANGS_SPIDER" );
 static const trait_id trait_GIZZARD( "GIZZARD" );
 static const trait_id trait_GOURMAND( "GOURMAND" );
 static const trait_id trait_HERBIVORE( "HERBIVORE" );
@@ -98,21 +95,17 @@ static const trait_id trait_HIBERNATE( "HIBERNATE" );
 static const trait_id trait_LACTOSE( "LACTOSE" );
 static const trait_id trait_M_DEPENDENT( "M_DEPENDENT" );
 static const trait_id trait_M_IMMUNE( "M_IMMUNE" );
-static const trait_id trait_MANDIBLES( "MANDIBLES" );
 static const trait_id trait_MEATARIAN( "MEATARIAN" );
-static const trait_id trait_MOUTH_TENTACLES( "MOUTH_TENTACLES" );
 static const trait_id trait_PARAIMMUNE( "PARAIMMUNE" );
 static const trait_id trait_PROBOSCIS( "PROBOSCIS" );
 static const trait_id trait_PROJUNK( "PROJUNK" );
 static const trait_id trait_PROJUNK2( "PROJUNK2" );
 static const trait_id trait_PSYCHOPATH( "PSYCHOPATH" );
 static const trait_id trait_RUMINANT( "RUMINANT" );
-static const trait_id trait_SABER_TEETH( "SABER_TEETH" );
 static const trait_id trait_SAPIOVORE( "SAPIOVORE" );
 static const trait_id trait_SAPROPHAGE( "SAPROPHAGE" );
 static const trait_id trait_SAPROVORE( "SAPROVORE" );
 static const trait_id trait_SCHIZOPHRENIC( "SCHIZOPHRENIC" );
-static const trait_id trait_SHARKTEETH( "SHARKTEETH" );
 static const trait_id trait_SLIMESPAWNER( "SLIMESPAWNER" );
 static const trait_id trait_SPIRITUAL( "SPIRITUAL" );
 static const trait_id trait_STIMBOOST( "STIMBOOST" );
@@ -557,7 +550,7 @@ int Character::vitamin_mod( const vitamin_id &vit, int qty, bool capped )
 
 void Character::vitamins_mod( const std::map<vitamin_id, int> &vitamins, bool capped )
 {
-    for( auto vit : vitamins ) {
+    for( const std::pair<const vitamin_id, int> &vit : vitamins ) {
         vitamin_mod( vit.first, vit.second, capped );
     }
 }
@@ -1643,6 +1636,9 @@ time_duration Character::get_consume_time( const item &it )
 {
     const int charges = std::max( it.charges, 1 );
     int volume = units::to_milliliter( it.volume() ) / charges;
+    if( 0 == volume && it.type ) {
+        volume = units::to_milliliter( it.type->volume );
+    }
     time_duration time = time_duration::from_seconds( std::max( ( volume /
                          5 ), 1 ) );  //Default 5 mL (1 tablespoon) per second
     float consume_time_modifier = 1;//only for food and drinks
@@ -1833,4 +1829,3 @@ bool player::consume( item_location loc, bool force )
 
     return true;
 }
-

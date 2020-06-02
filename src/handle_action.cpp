@@ -50,6 +50,7 @@
 #include "mapsharing.h"
 #include "messages.h"
 #include "monster.h"
+#include "move_mode.h"
 #include "mtype.h"
 #include "mutation.h"
 #include "options.h"
@@ -116,8 +117,6 @@ static const std::string flag_LITCIG( "LITCIG" );
 static const std::string flag_LOCKED( "LOCKED" );
 static const std::string flag_MAGIC_FOCUS( "MAGIC_FOCUS" );
 static const std::string flag_NO_QUICKDRAW( "NO_QUICKDRAW" );
-static const std::string flag_REACH_ATTACK( "REACH_ATTACK" );
-static const std::string flag_REACH3( "REACH3" );
 static const std::string flag_RELOAD_AND_SHOOT( "RELOAD_AND_SHOOT" );
 static const std::string flag_RELOAD_ONE( "RELOAD_ONE" );
 
@@ -270,7 +269,7 @@ input_context game::get_player_input( std::string &action )
                         if( !m.apply_vision_effects( w_terrain, m.get_visibility( lighting, cache ) ) ) {
                             m.drawsq( w_terrain, u, location, false, true,
                                       u.pos() + u.view_offset,
-                                      lighting == LL_LOW, lighting == LL_BRIGHT );
+                                      lighting == lit_level::LOW, lighting == lit_level::BRIGHT );
                         }
                     }
 #if defined(TILES)
@@ -311,7 +310,7 @@ input_context game::get_player_input( std::string &action )
                                 if( !m.apply_vision_effects( w_terrain, m.get_visibility( lighting, cache ) ) ) {
                                     m.drawsq( w_terrain, u, location, false, true,
                                               u.pos() + u.view_offset,
-                                              lighting == LL_LOW, lighting == LL_BRIGHT );
+                                              lighting == lit_level::LOW, lighting == lit_level::BRIGHT );
                                 }
                             }
                         }
@@ -632,14 +631,14 @@ static void grab()
     avatar &you = g->u;
     map &m = g->m;
 
-    if( you.get_grab_type() != OBJECT_NONE ) {
+    if( you.get_grab_type() != object_type::NONE ) {
         if( const optional_vpart_position vp = m.veh_at( you.pos() + you.grab_point ) ) {
             add_msg( _( "You release the %s." ), vp->vehicle().name );
         } else if( m.has_furn( you.pos() + you.grab_point ) ) {
             add_msg( _( "You release the %s." ), m.furnname( you.pos() + you.grab_point ) );
         }
 
-        you.grab( OBJECT_NONE );
+        you.grab( object_type::NONE );
         return;
     }
 
@@ -652,21 +651,21 @@ static void grab()
 
     if( grabp == you.pos() ) {
         add_msg( _( "You get a hold of yourself." ) );
-        you.grab( OBJECT_NONE );
+        you.grab( object_type::NONE );
         return;
     }
     if( const optional_vpart_position vp = m.veh_at( grabp ) ) {
         if( !vp->vehicle().handle_potential_theft( dynamic_cast<player &>( g->u ) ) ) {
             return;
         }
-        you.grab( OBJECT_VEHICLE, grabp - you.pos() );
+        you.grab( object_type::VEHICLE, grabp - you.pos() );
         add_msg( _( "You grab the %s." ), vp->vehicle().name );
     } else if( m.has_furn( grabp ) ) { // If not, grab furniture if present
         if( !m.furn( grabp ).obj().is_movable() ) {
             add_msg( _( "You can not grab the %s" ), m.furnname( grabp ) );
             return;
         }
-        you.grab( OBJECT_FURNITURE, grabp - you.pos() );
+        you.grab( object_type::FURNITURE, grabp - you.pos() );
         if( !m.can_move_furniture( grabp, &you ) ) {
             add_msg( _( "You grab the %s. It feels really heavy." ), m.furnname( grabp ) );
         } else {
@@ -1291,15 +1290,15 @@ static void read()
 }
 
 // Perform a reach attach using wielded weapon
-static void reach_attack( player &u )
+static void reach_attack( avatar &you )
 {
     g->temp_exit_fullscreen();
-    g->m.draw( g->w_terrain, u.pos() );
+    g->m.draw( g->w_terrain, you.pos() );
 
-    target_handler::trajectory traj = target_handler::mode_reach( u, u.weapon );
+    target_handler::trajectory traj = target_handler::mode_reach( you, you.weapon );
 
     if( !traj.empty() ) {
-        u.reach_attack( traj.back() );
+        you.reach_attack( traj.back() );
     }
     g->draw_ter();
     wrefresh( g->w_terrain );
@@ -1309,7 +1308,7 @@ static void reach_attack( player &u )
 
 static void fire()
 {
-    player &u = g->u;
+    avatar &u = g->u;
 
     // Use vehicle turret or draw a pistol from a holster if unarmed
     if( !u.is_armed() ) {
@@ -1318,7 +1317,7 @@ static void fire()
 
         turret_data turret;
         if( vp && ( turret = vp->vehicle().turret_query( u.pos() ) ) ) {
-            avatar_action::fire_turret_manual( g->u, g->m, turret );
+            avatar_action::fire_turret_manual( u, g->m, turret );
             return;
         }
 
@@ -1362,7 +1361,7 @@ static void fire()
     }
 
     if( u.weapon.is_gun() && !u.weapon.gun_current_mode().melee() ) {
-        avatar_action::fire_wielded_weapon( g->u );
+        avatar_action::fire_wielded_weapon( u );
     } else if( u.weapon.current_reach_range( u ) > 1 ) {
         if( u.has_effect( effect_relax_gas ) ) {
             if( one_in( 8 ) ) {
@@ -1381,22 +1380,27 @@ static void fire()
 static void open_movement_mode_menu()
 {
     avatar &u = g->u;
+    const std::vector<move_mode_id> &modes = move_modes_by_speed();
+    const int cycle = 1027;
     uilist as_m;
 
     as_m.text = _( "Change to which movement mode?" );
 
-    as_m.entries.emplace_back( CMM_RUN, true, 'r', _( "Run" ) );
-    as_m.entries.emplace_back( CMM_WALK, true, 'w', _( "Walk" ) );
-    as_m.entries.emplace_back( CMM_CROUCH, true, 'c', _( "Crouch" ) );
-    as_m.entries.emplace_back( CMM_COUNT, true, '"', _( "Cycle move mode (run/walk/crouch)" ) );
-    as_m.selected = 1;
+    for( size_t i = 0; i < modes.size(); ++i ) {
+        const move_mode_id &curr = modes[i];
+        as_m.entries.emplace_back( i, u.can_switch_to( curr ), curr->letter(), curr->name() );
+    }
+    as_m.entries.emplace_back( cycle, u.can_switch_to( u.current_movement_mode()->cycle() ), '"',
+                               _( "Cycle move mode" ) );
+    // This should select the middle move mode
+    as_m.selected = std::floor( modes.size() / 2 );
     as_m.query();
 
     if( as_m.ret != UILIST_CANCEL ) {
-        if( as_m.ret == CMM_COUNT ) {
+        if( as_m.ret == cycle ) {
             u.cycle_move_mode();
         } else {
-            u.set_movement_mode( static_cast<character_movemode>( as_m.ret ) );
+            u.set_movement_mode( modes[as_m.ret] );
         }
     }
 }
@@ -1414,7 +1418,7 @@ static void cast_spell()
     }
 
     bool can_cast_spells = false;
-    for( spell_id sp : spells ) {
+    for( const spell_id &sp : spells ) {
         spell temp_spell = u.magic.get_spell( sp );
         if( temp_spell.can_cast( u ) ) {
             can_cast_spells = true;
@@ -1447,7 +1451,7 @@ static void cast_spell()
         return;
     }
 
-    if( sp.energy_source() == hp_energy && !u.has_quality( qual_CUT ) ) {
+    if( sp.energy_source() == magic_energy_type::hp && !u.has_quality( qual_CUT ) ) {
         add_msg( game_message_params{ m_bad, gmf_bypass_cooldown },
                  _( "You cannot cast Blood Magic without a cutting implement." ) );
         return;

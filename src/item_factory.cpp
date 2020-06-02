@@ -98,19 +98,19 @@ static bool assign_coverage_from_json( const JsonObject &jo, const std::string &
 {
     auto parse = [&parts, &sided]( const std::string & val ) {
         if( val == "ARMS" || val == "ARM_EITHER" ) {
-            parts.set( bp_arm_l );
-            parts.set( bp_arm_r );
+            parts.set( bodypart_str_id( "arm_l" ) );
+            parts.set( bodypart_str_id( "arm_r" ) );
         } else if( val == "HANDS" || val == "HAND_EITHER" ) {
-            parts.set( bp_hand_l );
-            parts.set( bp_hand_r );
+            parts.set( bodypart_str_id( "hand_l" ) );
+            parts.set( bodypart_str_id( "hand_r" ) );
         } else if( val == "LEGS" || val == "LEG_EITHER" ) {
-            parts.set( bp_leg_l );
-            parts.set( bp_leg_r );
+            parts.set( bodypart_str_id( "leg_l" ) );
+            parts.set( bodypart_str_id( "leg_r" ) );
         } else if( val == "FEET" || val == "FOOT_EITHER" ) {
-            parts.set( bp_foot_l );
-            parts.set( bp_foot_r );
+            parts.set( bodypart_str_id( "foot_l" ) );
+            parts.set( bodypart_str_id( "foot_r" ) );
         } else {
-            parts.set( get_body_part_token( val ) );
+            parts.set( convert_bp( get_body_part_token( val ) ) );
         }
         sided |= val == "ARM_EITHER" || val == "HAND_EITHER" ||
                  val == "LEG_EITHER" || val == "FOOT_EITHER";
@@ -435,19 +435,19 @@ void Item_factory::finalize_pre( itype &obj )
     }
 
     if( obj.item_tags.count( "PERSONAL" ) ) {
-        obj.layer = PERSONAL_LAYER;
+        obj.layer = layer_level::PERSONAL;
     } else if( obj.item_tags.count( "SKINTIGHT" ) ) {
-        obj.layer = UNDERWEAR_LAYER;
+        obj.layer = layer_level::UNDERWEAR;
     } else if( obj.item_tags.count( "WAIST" ) ) {
-        obj.layer = WAIST_LAYER;
+        obj.layer = layer_level::WAIST;
     } else if( obj.item_tags.count( "OUTER" ) ) {
-        obj.layer = OUTER_LAYER;
+        obj.layer = layer_level::OUTER;
     } else if( obj.item_tags.count( "BELTED" ) ) {
-        obj.layer = BELTED_LAYER;
+        obj.layer = layer_level::BELTED;
     } else if( obj.item_tags.count( "AURA" ) ) {
-        obj.layer = AURA_LAYER;
+        obj.layer = layer_level::AURA;
     } else {
-        obj.layer = REGULAR_LAYER;
+        obj.layer = layer_level::REGULAR;
     }
 
     if( obj.can_use( "MA_MANUAL" ) && obj.book && obj.book->martial_art.is_null() &&
@@ -1013,6 +1013,29 @@ void Item_factory::check_definitions() const
         std::string msg;
         const itype *type = &elem.second;
 
+        if( !type->item_tags.count( "TARDIS" ) ) {
+            bool is_container = false;
+            for( const pocket_data &pocket : type->pockets ) {
+                if( pocket.type == item_pocket::pocket_type::CONTAINER ) {
+                    is_container = true;
+                    // no need to look further
+                    break;
+                }
+            }
+            if( is_container ) {
+                units::volume volume = type->volume;
+                if( type->count_by_charges() ) {
+                    volume /= type->charges_default();
+                }
+                if( item_contents( type->pockets ).bigger_on_the_inside( volume ) ) {
+                    msg += "is bigger on the inside.  consider using TARDIS flag.\n";
+                }
+                for( const pocket_data &data : type->pockets ) {
+                    msg += data.check_definition();
+                }
+            }
+        }
+
         if( !type->category_force.is_valid() ) {
             msg += "undefined category " + type->category_force.str() + "\n";
         }
@@ -1023,7 +1046,7 @@ void Item_factory::check_definitions() const
         if( type->volume < 0_ml ) {
             msg += "negative volume\n";
         }
-        if( type->count_by_charges() || type->phase == LIQUID ) {
+        if( type->count_by_charges() || type->phase == phase_id::LIQUID ) {
             if( type->stack_size <= 0 ) {
                 msg += string_format( "invalid stack_size %d on type using charges\n", type->stack_size );
             }
@@ -2252,7 +2275,6 @@ void Item_factory::check_and_create_magazine_pockets( itype &def )
             for( const ammotype &amtype : def.magazine->type ) {
                 mag_data.ammo_restriction.emplace( amtype, def.magazine->capacity );
             }
-            mag_data.fire_protection = def.magazine->protects_contents;
         }
         if( def.gun ) {
             for( const ammotype &amtype : def.gun->ammo ) {
@@ -2732,8 +2754,6 @@ bool Item_factory::load_sub_ref( std::unique_ptr<Item_spawn_data> &ptr, const Js
     if( obj.has_member( name ) ) {
         obj.throw_error( string_format( "This has been a TODO: since 2014.  Use '%s' and/or '%s' instead.",
                                         iname, gname ) );
-        // TODO: !
-        return false;
     }
     if( obj.has_string( iname ) ) {
         entries.push_back( std::make_pair( obj.get_string( iname ), false ) );
@@ -2744,7 +2764,6 @@ bool Item_factory::load_sub_ref( std::unique_ptr<Item_spawn_data> &ptr, const Js
 
     if( entries.size() > 1 && name != "contents" ) {
         obj.throw_error( string_format( "You can only use one of '%s' and '%s'", iname, gname ) );
-        return false;
     } else if( entries.size() == 1 ) {
         const auto type = entries.front().second ? Single_item_creator::Type::S_ITEM_GROUP :
                           Single_item_creator::Type::S_ITEM;
@@ -3010,13 +3029,13 @@ std::string enum_to_string<phase_id>( phase_id data )
 {
     switch( data ) {
         // *INDENT-OFF*
-        case PNULL: return "null";
-        case LIQUID: return "liquid";
-        case SOLID: return "solid";
-        case GAS: return "gas";
-        case PLASMA: return "plasma";
+        case phase_id::PNULL: return "null";
+        case phase_id::LIQUID: return "liquid";
+        case phase_id::SOLID: return "solid";
+        case phase_id::GAS: return "gas";
+        case phase_id::PLASMA: return "plasma";
         // *INDENT-ON*
-        case num_phases:
+        case phase_id::num_phases:
             break;
     }
     debugmsg( "Invalid phase" );

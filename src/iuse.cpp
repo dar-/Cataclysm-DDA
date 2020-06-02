@@ -177,7 +177,7 @@ static const efftype_id effect_jetinjector( "jetinjector" );
 static const efftype_id effect_lack_sleep( "lack_sleep" );
 static const efftype_id effect_laserlocked( "laserlocked" );
 static const efftype_id effect_lying_down( "lying_down" );
-static const efftype_id effect_melatonin_supplements( "melatonin" );
+static const efftype_id effect_melatonin( "melatonin" );
 static const efftype_id effect_meth( "meth" );
 static const efftype_id effect_monster_armor( "monster_armor" );
 static const efftype_id effect_music( "music" );
@@ -189,7 +189,7 @@ static const efftype_id effect_ridden( "ridden" );
 static const efftype_id effect_riding( "riding" );
 static const efftype_id effect_run( "run" );
 static const efftype_id effect_sad( "sad" );
-static const efftype_id effect_saddled( "monster_saddled" );
+static const efftype_id effect_monster_saddled( "monster_saddled" );
 static const efftype_id effect_sap( "sap" );
 static const efftype_id effect_shakes( "shakes" );
 static const efftype_id effect_sleep( "sleep" );
@@ -337,11 +337,11 @@ static const trait_id trait_WAYFARER( "WAYFARER" );
 static const quality_id qual_AXE( "AXE" );
 static const quality_id qual_DIG( "DIG" );
 
-static const species_id FUNGUS( "FUNGUS" );
-static const species_id HALLUCINATION( "HALLUCINATION" );
-static const species_id INSECT( "INSECT" );
-static const species_id ROBOT( "ROBOT" );
-static const species_id ZOMBIE( "ZOMBIE" );
+static const species_id species_FUNGUS( "FUNGUS" );
+static const species_id species_HALLUCINATION( "HALLUCINATION" );
+static const species_id species_INSECT( "INSECT" );
+static const species_id species_ROBOT( "ROBOT" );
+static const species_id species_ZOMBIE( "ZOMBIE" );
 
 static const mongroup_id GROUP_FISH( "GROUP_FISH" );
 
@@ -712,7 +712,7 @@ int iuse::fungicide( player *p, item *it, bool, const tripoint & )
                 if( monster *const mon_ptr = g->critter_at<monster>( dest ) ) {
                     monster &critter = *mon_ptr;
                     if( g->u.sees( dest ) &&
-                        !critter.type->in_species( FUNGUS ) ) {
+                        !critter.type->in_species( species_FUNGUS ) ) {
                         add_msg( m_warning, _( "The %s is covered in tiny spores!" ),
                                  critter.name() );
                     }
@@ -1087,7 +1087,7 @@ int iuse::oxygen_bottle( player *p, item *it, bool, const tripoint & )
 int iuse::blech( player *p, item *it, bool, const tripoint & )
 {
     // TODO: Add more effects?
-    if( it->made_of( LIQUID ) ) {
+    if( it->made_of( phase_id::LIQUID ) ) {
         if( !p->query_yn( _( "This looks unhealthy, sure you want to drink it?" ) ) ) {
             return 0;
         }
@@ -1122,7 +1122,7 @@ int iuse::blech( player *p, item *it, bool, const tripoint & )
 int iuse::blech_because_unclean( player *p, item *it, bool, const tripoint & )
 {
     if( !p->is_npc() ) {
-        if( it->made_of( LIQUID ) ) {
+        if( it->made_of( phase_id::LIQUID ) ) {
             if( !p->query_yn( _( "This looks unclean, sure you want to drink it?" ) ) ) {
                 return 0;
             }
@@ -2026,7 +2026,7 @@ int iuse::extinguisher( player *p, item *it, bool, const tripoint & )
                 p->add_msg_if_player( _( "The %s looks blinded." ), critter.name() );
             }
         }
-        if( critter.made_of( LIQUID ) ) {
+        if( critter.made_of( phase_id::LIQUID ) ) {
             if( g->u.sees( critter ) ) {
                 p->add_msg_if_player( _( "The %s is frozen!" ), critter.name() );
             }
@@ -3681,7 +3681,7 @@ int iuse::granade_act( player *p, item *it, bool t, const tripoint &pos )
                 explosion_handler::draw_explosion( pos, explosion_radius, c_light_cyan );
                 for( const tripoint &dest : g->m.points_in_radius( pos, explosion_radius ) ) {
                     monster *const mon = g->critter_at<monster>( dest, true );
-                    if( mon && ( mon->type->in_species( INSECT ) || mon->is_hallucination() ) ) {
+                    if( mon && ( mon->type->in_species( species_INSECT ) || mon->is_hallucination() ) ) {
                         mon->die_in_explosion( nullptr );
                     }
                 }
@@ -4019,7 +4019,7 @@ int iuse::pheromone( player *p, item *it, bool, const tripoint &pos )
             continue;
         }
         monster &critter = *mon_ptr;
-        if( critter.type->in_species( ZOMBIE ) && critter.friendly == 0 &&
+        if( critter.type->in_species( species_ZOMBIE ) && critter.friendly == 0 &&
             rng( 0, 500 ) > critter.get_hp() ) {
             converts++;
             critter.anger = 0;
@@ -4594,7 +4594,7 @@ int iuse::hand_crank( player *p, item *it, bool, const tripoint & )
         p->add_msg_if_player( m_info, _( "It's not waterproof enough to work underwater." ) );
         return 0;
     }
-    if( p->get_fatigue() >= DEAD_TIRED ) {
+    if( p->get_fatigue() >= fatigue_levels::DEAD_TIRED ) {
         p->add_msg_if_player( m_info, _( "You're too exhausted to keep cranking." ) );
         return 0;
     }
@@ -4640,7 +4640,7 @@ int iuse::vibe( player *p, item *it, bool, const tripoint & )
         p->add_msg_if_player( m_info, _( "The %s's batteries are dead." ), it->tname() );
         return 0;
     }
-    if( p->get_fatigue() >= DEAD_TIRED ) {
+    if( p->get_fatigue() >= fatigue_levels::DEAD_TIRED ) {
         p->add_msg_if_player( m_info, _( "*Your* batteries are dead." ) );
         return 0;
     } else {
@@ -5233,7 +5233,7 @@ int iuse::mop( player *p, item *it, bool, const tripoint & )
         if( !g->m.has_flag( "LIQUIDCONT", pnt ) ) {
             map_stack items = g->m.i_at( pnt );
             auto found = std::find_if( items.begin(), items.end(), []( const item & it ) {
-                return it.made_of( LIQUID );
+                return it.made_of( phase_id::LIQUID );
             } );
             if( found != items.end() ) {
                 return true;
@@ -5254,7 +5254,7 @@ int iuse::mop( player *p, item *it, bool, const tripoint & )
                 }
                 vehicle_stack items = veh->get_items( elem );
                 auto found = std::find_if( items.begin(), items.end(), []( const item & it ) {
-                    return it.made_of( LIQUID );
+                    return it.made_of( phase_id::LIQUID );
                 } );
                 if( found != items.end() ) {
                     return true;
@@ -6218,7 +6218,7 @@ int iuse::seed( player *p, item *it, bool, const tripoint & )
 bool iuse::robotcontrol_can_target( player *p, const monster &m )
 {
     return !m.is_dead()
-           && m.type->in_species( ROBOT )
+           && m.type->in_species( species_ROBOT )
            && m.friendly == 0
            && rl_dist( p->pos(), m.pos() ) <= 10;
 }
@@ -6299,7 +6299,7 @@ int iuse::robotcontrol( player *p, item *it, bool, const tripoint & )
             p->moves -= to_moves<int>( 1_seconds );
             int f = 0; //flag to check if you have robotic allies
             for( monster &critter : g->all_monsters() ) {
-                if( critter.friendly != 0 && critter.type->in_species( ROBOT ) ) {
+                if( critter.friendly != 0 && critter.type->in_species( species_ROBOT ) ) {
                     p->add_msg_if_player( _( "A following %s goes into passive mode." ),
                                           critter.name() );
                     critter.add_effect( effect_docile, 1_turns, num_bp, true );
@@ -7097,7 +7097,7 @@ static std::string effects_description_for_creature( Creature *const creature, s
         { effect_lying_down, ef_con( to_translation( " is <color_dark_blue>sleeping</color>. " ), to_translation( "lies" ) ) },
         { effect_sleep, ef_con( to_translation( " is <color_dark_blue>sleeping</color>. " ), to_translation( "lies" ) ) },
         { effect_haslight, ef_con( to_translation( " is <color_yellow>lit</color>. " ) ) },
-        { effect_saddled, ef_con( to_translation( " is <color_dark_gray>saddled</color>. " ) ) },
+        { effect_monster_saddled, ef_con( to_translation( " is <color_dark_gray>saddled</color>. " ) ) },
         { effect_harnessed, ef_con( to_translation( " is being <color_dark_gray>harnessed</color> by a vehicle. " ) ) },
         { effect_monster_armor, ef_con( to_translation( " is <color_dark_gray>wearing armor</color>. " ) ) },
         { effect_has_bag, ef_con( to_translation( " have <color_dark_gray>bag</color> attached. " ) ) },
@@ -7357,7 +7357,7 @@ static extended_photo_def photo_def_for_camera_point( const tripoint &aim_point,
                 if( guy->is_hallucination() ) {
                     continue; // do not include hallucinations
                 }
-                if( guy->movement_mode_is( CMM_CROUCH ) ) {
+                if( guy->is_crouching() ) {
                     pose = _( "sits" );
                 } else {
                     pose = _( "stands" );
@@ -7369,7 +7369,7 @@ static extended_photo_def photo_def_for_camera_point( const tripoint &aim_point,
                 creature = guy;
                 player_vec.push_back( guy );
             } else {
-                if( mon->is_hallucination() || mon->type->in_species( HALLUCINATION ) ) {
+                if( mon->is_hallucination() || mon->type->in_species( species_HALLUCINATION ) ) {
                     continue; // do not include hallucinations
                 }
                 pose = _( "stands" );
@@ -7777,8 +7777,9 @@ int iuse::camera( player *p, item *it, bool, const tripoint & )
                     monster &z = *mon;
 
                     // shoot past small monsters and hallucinations
-                    if( trajectory_point != aim_point && ( z.type->size <= MS_SMALL || z.is_hallucination() ||
-                                                           z.type->in_species( HALLUCINATION ) ) ) {
+                    if( trajectory_point != aim_point && ( z.type->size <= creature_size::small ||
+                                                           z.is_hallucination() ||
+                                                           z.type->in_species( species_HALLUCINATION ) ) ) {
                         continue;
                     }
                     if( !aim_bounds.is_point_inside( trajectory_point ) ) {
@@ -7790,7 +7791,7 @@ int iuse::camera( player *p, item *it, bool, const tripoint & )
                     }
                     // get an special message if the target is a hallucination
                     if( trajectory_point == aim_point && ( z.is_hallucination() ||
-                                                           z.type->in_species( HALLUCINATION ) ) ) {
+                                                           z.type->in_species( species_HALLUCINATION ) ) ) {
                         p->add_msg_if_player( _( "Strange… there's nothing in the center of picture?" ) );
                     }
                 } else if( guy ) {
@@ -8792,7 +8793,7 @@ int iuse::multicooker( player *p, item *it, bool t, const tripoint &pos )
             }
             const std::string dish_name = dish.tname( dish.charges, false );
             const bool is_delicious = dish.has_flag( "HOT" ) && dish.has_flag( "EATEN_HOT" );
-            if( dish.made_of( LIQUID ) ) {
+            if( dish.made_of( phase_id::LIQUID ) ) {
                 if( !p->check_eligible_containers_for_crafting( *recipe_id( it->get_var( "RECIPE" ) ), 1 ) ) {
                     p->add_msg_if_player( m_info, _( "You don't have a suitable container to store your %s." ),
                                           dish_name );
@@ -8877,7 +8878,7 @@ int iuse::multicooker( player *p, item *it, bool t, const tripoint &pos )
                     return 0;
                 }
 
-                for( auto component : reqs->get_components() ) {
+                for( const auto &component : reqs->get_components() ) {
                     p->consume_items( component, 1, filter );
                 }
 
@@ -9553,13 +9554,13 @@ int iuse::capture_monster_act( player *p, item *it, bool, const tripoint &pos )
             return 0;
         }
     } else {
-        if( !it->has_property( "monster_size_capacity" ) ) {
-            debugmsg( "%s has no monster_size_capacity.", it->tname() );
+        if( !it->has_property( "creature_size_capacity" ) ) {
+            debugmsg( "%s has no creature_size_capacity.", it->tname() );
             return 0;
         }
-        const std::string capacity = it->get_property_string( "monster_size_capacity" );
+        const std::string capacity = it->get_property_string( "creature_size_capacity" );
         if( Creature::size_map.count( capacity ) == 0 ) {
-            debugmsg( "%s has invalid monster_size_capacity %s.",
+            debugmsg( "%s has invalid creature_size_capacity %s.",
                       it->tname(), capacity.c_str() );
             return 0;
         }
@@ -9713,7 +9714,7 @@ int iuse::wash_items( player *p, bool soft_items, bool hard_items )
     const inventory &crafting_inv = p->crafting_inventory();
 
     auto is_liquid = []( const item & it ) {
-        return it.made_of( LIQUID );
+        return it.made_of( phase_id::LIQUID );
     };
     int available_water = std::max(
                               crafting_inv.charges_of( itype_water, INT_MAX, is_liquid ),
@@ -9796,7 +9797,7 @@ int iuse::wash_items( player *p, bool soft_items, bool hard_items )
     // Assign the activity values.
     p->assign_activity( ACT_WASH, required.time );
 
-    for( drop_location pair : to_clean ) {
+    for( const drop_location &pair : to_clean ) {
         p->activity.targets.push_back( pair.first );
         p->activity.values.push_back( pair.second );
     }
@@ -9927,11 +9928,11 @@ int iuse::disassemble( player *p, item *it, bool, const tripoint & )
 int iuse::melatonin_tablet( player *p, item *it, bool, const tripoint & )
 {
     p->add_msg_if_player( _( "You pop a %s." ), it->tname() );
-    if( p->has_effect( effect_melatonin_supplements ) ) {
+    if( p->has_effect( effect_melatonin ) ) {
         p->add_msg_if_player( m_warning,
                               _( "Simply taking more melatonin won't help.  You have to go to sleep for it to work." ) );
     }
-    p->add_effect( effect_melatonin_supplements, 16_hours );
+    p->add_effect( effect_melatonin, 16_hours );
     return it->type->charges_to_use();
 }
 

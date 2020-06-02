@@ -61,8 +61,8 @@ static bool is_player_outside()
     return g->m.is_outside( point( g->u.posx(), g->u.posy() ) ) && g->get_levz() >= 0;
 }
 
-#define THUNDER_CHANCE 50
-#define LIGHTNING_CHANCE 600
+static constexpr int THUNDER_CHANCE = 50;
+static constexpr int LIGHTNING_CHANCE = 600;
 
 /**
  * Glare.
@@ -397,10 +397,10 @@ static void wet_player( int amount )
 
     const auto &wet = g->u.body_wetness;
     const auto &capacity = g->u.drench_capacity;
-    body_part_set drenched_parts{ { bp_torso, bp_arm_l, bp_arm_r, bp_head } };
+    body_part_set drenched_parts{ { bodypart_str_id( "torso" ), bodypart_str_id( "arm_l" ), bodypart_str_id( "arm_r" ), bodypart_str_id( "head" ) } };
     if( wet[bp_torso] * 100 >= capacity[bp_torso] * 50 ) {
         // Once upper body is 50%+ drenched, start soaking the legs too
-        drenched_parts |= { { bp_leg_l, bp_leg_r } };
+        drenched_parts.unify_set( { { bodypart_str_id( "leg_l" ), bodypart_str_id( "leg_r" ) } } );
     }
 
     g->u.drench( amount, drenched_parts, false );

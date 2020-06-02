@@ -40,7 +40,7 @@ class item_pocket
             MIGRATION, // this allows items to load contents that are too big, in order to spill them later.
             LAST
         };
-        enum class contain_code {
+        enum class contain_code : int {
             SUCCESS,
             // only mods can go into the pocket for mods
             ERR_MOD,
@@ -106,6 +106,8 @@ class item_pocket
         // how many more of @it can this pocket hold?
         int remaining_capacity_for_item( const item &it ) const;
         units::volume volume_capacity() const;
+        // the amount of space this pocket can hold before it starts expanding
+        units::volume magazine_well() const;
         units::mass weight_capacity() const;
         // The largest volume of contents this pocket can have.  Different from
         // volume_capacity because that doesn't take into account ammo containers.
@@ -185,7 +187,7 @@ class item_pocket
          * NOTE: this destroys the items that get processed
          */
         void process( player *carrier, const tripoint &pos, bool activate, float insulation = 1,
-                      temperature_flag flag = temperature_flag::TEMP_NORMAL, float spoil_multiplier_parent = 1.0f );
+                      temperature_flag flag = temperature_flag::NORMAL, float spoil_multiplier_parent = 1.0f );
         pocket_type saved_type() const {
             return _saved_type;
         }
@@ -319,6 +321,8 @@ class pocket_data
         bool operator==( const pocket_data &rhs ) const;
 
         units::volume max_contains_volume() const;
+
+        std::string check_definition() const;
 
         void load( const JsonObject &jo );
         void deserialize( JsonIn &jsin );

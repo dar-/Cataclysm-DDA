@@ -119,24 +119,17 @@ static const itype_id itype_UPS( "UPS" );
 static const skill_id skill_fabrication( "fabrication" );
 static const skill_id skill_firstaid( "firstaid" );
 static const skill_id skill_lockpick( "lockpick" );
-static const skill_id skill_mechanics( "mechanics" );
 static const skill_id skill_survival( "survival" );
-
-static const species_id HUMAN( "HUMAN" );
-static const species_id ZOMBIE( "ZOMBIE" );
 
 static const trait_id trait_CENOBITE( "CENOBITE" );
 static const trait_id trait_DEBUG_BIONICS( "DEBUG_BIONICS" );
 static const trait_id trait_TOLERANCE( "TOLERANCE" );
 static const trait_id trait_LIGHTWEIGHT( "LIGHTWEIGHT" );
-static const trait_id trait_PACIFIST( "PACIFIST" );
-static const trait_id trait_PSYCHOPATH( "PSYCHOPATH" );
 static const trait_id trait_PYROMANIA( "PYROMANIA" );
 static const trait_id trait_NOPAIN( "NOPAIN" );
 static const trait_id trait_MASOCHIST( "MASOCHIST" );
 static const trait_id trait_MASOCHIST_MED( "MASOCHIST_MED" );
 static const trait_id trait_MUT_JUNKIE( "MUT_JUNKIE" );
-static const trait_id trait_SAPIOVORE( "SAPIOVORE" );
 static const trait_id trait_SELFAWARE( "SELFAWARE" );
 static const trait_id trait_SMALL_OK( "SMALL_OK" );
 static const trait_id trait_SMALL2( "SMALL2" );
@@ -922,9 +915,12 @@ int place_monster_iuse::use( player &p, item &it, bool, const tripoint & ) const
                                  newmon.name() );
             amdef.second = ammo_item.charges;
         }
+    } else {
+        newmon.ammo = newmon.type->starting_ammo;
     }
+
     int skill_offset = 0;
-    for( skill_id sk : skills ) {
+    for( const skill_id &sk : skills ) {
         skill_offset += p.get_skill_level( sk ) / 2;
     }
     /** @EFFECT_INT increases chance of a placed turret being friendly */
@@ -941,10 +937,6 @@ int place_monster_iuse::use( player &p, item &it, bool, const tripoint & ) const
             p.add_msg_if_player( m_warning, "%s", _( friendly_msg ) );
         }
         newmon.friendly = -1;
-    }
-    // TODO: add a flag instead of monster id or something?
-    if( newmon.type->id == mtype_id( "mon_laserturret" ) && !g->is_in_sunlight( newmon.pos() ) ) {
-        p.add_msg_if_player( _( "A flashing LED on the laser turret appears to indicate low light." ) );
     }
     return 1;
 }
@@ -1062,50 +1054,19 @@ int pick_lock_actor::use( player &p, item &it, bool, const tripoint & ) const
         return 0;
     }
 
-    if( p.is_mounted() ) {
-        p.add_msg_if_player( m_info, _( "You cannot do that while mounted." ) );
-        return 0;
-    }
-
-    const std::function<bool( const tripoint & )> f = []( const tripoint & pnt ) {
-        if( pnt == g->u.pos() ) {
-            return false;
-        }
-        return g->m.has_flag( "PICKABLE", pnt );
-    };
-
-    const cata::optional<tripoint> pnt_ = choose_adjacent_highlight(
-            _( "Use your lockpick where?" ), _( "There is nothing to lockpick nearby." ), f, false );
-    if( !pnt_ ) {
-        return 0;
-    }
-    const tripoint &pnt = *pnt_;
-    const ter_id type = g->m.ter( pnt );
-    if( !f( pnt ) ) {
-        if( pnt == p.pos() ) {
-            p.add_msg_if_player( m_info, _( "You pick your nose and your sinuses swing open." ) );
-        } else if( g->critter_at<npc>( pnt ) ) {
-            p.add_msg_if_player( m_info,
-                                 _( "You can pick your friends, and you can\npick your nose, but you can't pick\nyour friend's nose." ) );
-        } else if( type == t_door_c ) {
-            p.add_msg_if_player( m_info, _( "That door isn't locked." ) );
-        } else {
-            p.add_msg_if_player( m_info, _( "That cannot be picked." ) );
-        }
+    avatar &you = dynamic_cast<avatar &>( p );
+    cata::optional<tripoint> target = lockpick_activity_actor::select_location( you );
+    if( !target.has_value() ) {
         return 0;
     }
 
     /** @EFFECT_DEX speeds up door lock picking */
     /** @EFFECT_LOCKPICK speeds up door lock picking */
-    const int duration = std::max( 0,
+    const int duration = std::max( to_moves<int>( 10_seconds ),
                                    to_moves<int>( 10_minutes - time_duration::from_minutes( it.get_quality( qual_LOCKPICK ) ) ) -
                                    ( p.dex_cur + p.get_skill_level( skill_lockpick ) ) * 2300 );
-    p.practice( skill_lockpick, std::pow( 2, p.get_skill_level( skill_lockpick ) ) + 1 );
-
-    p.assign_activity( activity_id( "ACT_LOCKPICK" ), duration, -1, p.get_item_position( &it ) );
-    p.activity.targets.push_back( item_location( p, &it ) );
-    p.activity.placement = pnt;
-
+    you.assign_activity( lockpick_activity_actor( duration, item_location( p, &it ), cata::nullopt,
+                         g->m.getabs( *target ) ) );
     return it.type->charges_to_use();
 }
 
@@ -1668,7 +1629,7 @@ std::unique_ptr<iuse_actor> inscribe_actor::clone() const
 
 bool inscribe_actor::item_inscription( item &tool, item &cut ) const
 {
-    if( !cut.made_of( SOLID ) ) {
+    if( !cut.made_of( phase_id::SOLID ) ) {
         add_msg( m_info, _( "You can't inscribe an item that isn't solid!" ) );
         return false;
     }
@@ -2482,7 +2443,8 @@ int holster_actor::use( player &p, item &it, bool, const tripoint & ) const
             return 0;
         }
         // may not strictly be the correct item_location, but plumbing item_location through all iuse_actor::use won't work
-        game_menus::inv::insert_items( *p.as_avatar(), item_location( p, &it ) );
+        item_location item_loc( p, &it );
+        game_menus::inv::insert_items( *p.as_avatar(), item_loc );
     }
 
     return 0;
@@ -4304,7 +4266,7 @@ int sew_advanced_actor::use( player &p, item &it, bool, const tripoint & ) const
     tmenu.text = _( "How do you want to modify it?" );
 
     int index = 0;
-    for( auto cm : clothing_mods ) {
+    for( const clothing_mod_id &cm : clothing_mods ) {
         auto obj = cm.obj();
         item temp_item = modded_copy( mod, obj.flag );
         temp_item.update_clothing_mod_val();

@@ -216,7 +216,7 @@ bool mutation_branch::conflicts_with_item( const item &it ) const
     }
 
     for( body_part bp : restricts_gear ) {
-        if( it.covers( bp ) ) {
+        if( it.covers( convert_bp( bp ).id() ) ) {
             return true;
         }
     }
@@ -235,17 +235,17 @@ const resistances &mutation_branch::damage_resistance( body_part bp ) const
     return iter->second;
 }
 
-m_size calculate_size( const Character &c )
+creature_size calculate_size( const Character &c )
 {
     if( c.has_trait( trait_id( "SMALL2" ) ) || c.has_trait( trait_id( "SMALL_OK" ) ) ||
         c.has_trait( trait_id( "SMALL" ) ) ) {
-        return MS_SMALL;
+        return creature_size::small;
     } else if( c.has_trait( trait_LARGE ) || c.has_trait( trait_LARGE_OK ) ) {
-        return MS_LARGE;
+        return creature_size::large;
     } else if( c.has_trait( trait_HUGE ) || c.has_trait( trait_HUGE_OK ) ) {
-        return MS_HUGE;
+        return creature_size::huge;
     }
-    return MS_MEDIUM;
+    return creature_size::medium;
 }
 
 void Character::mutation_effect( const trait_id &mut )
@@ -476,7 +476,7 @@ void Character::activate_mutation( const trait_id &mut )
     // Fatigue can go to Exhausted.
     if( ( mdata.hunger && get_kcal_percent() < 0.5f ) || ( mdata.thirst &&
             get_thirst() >= 260 ) ||
-        ( mdata.fatigue && get_fatigue() >= EXHAUSTED ) ) {
+        ( mdata.fatigue && get_fatigue() >= fatigue_levels::EXHAUSTED ) ) {
         // Insufficient Foo to *maintain* operation is handled in player::suffer
         add_msg_if_player( m_warning, _( "You feel like using your %s would kill you!" ),
                            mdata.name() );

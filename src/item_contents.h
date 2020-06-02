@@ -51,6 +51,8 @@ class item_contents
         bool empty_container() const;
         // checks if CONTAINER pockets are all full
         bool full( bool allow_bucket ) const;
+        // are any CONTAINER pockets bigger on the inside than the container's volume?
+        bool bigger_on_the_inside( const units::volume &container_volume ) const;
         // number of pockets
         size_t size() const;
 
@@ -114,6 +116,8 @@ class item_contents
         int best_quality( const quality_id &id ) const;
 
         // what will the move cost be of taking @it out of this container?
+        // should only be used from item_location if possible, to account for
+        // player inventory handling penalties from traits
         int obtain_cost( const item &it ) const;
         // what will the move cost be of storing @it into this container? (CONTAINER pocket type)
         int insert_cost( const item &it ) const;
@@ -184,7 +188,7 @@ class item_contents
          * NOTE: this destroys the items that get processed
          */
         void process( player *carrier, const tripoint &pos, bool activate, float insulation = 1,
-                      temperature_flag flag = temperature_flag::TEMP_NORMAL, float spoil_multiplier_parent = 1.0f );
+                      temperature_flag flag = temperature_flag::NORMAL, float spoil_multiplier_parent = 1.0f );
 
         void migrate_item( item &obj, const std::set<itype_id> &migrations );
         bool item_has_uses_recursive() const;

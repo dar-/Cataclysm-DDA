@@ -168,7 +168,7 @@ class job_data
             const std::pair<activity_id, int> &b ) {
                 return a.second > b.second;
             } );
-            for( std::pair<activity_id, int> elem : pairs ) {
+            for( const std::pair<activity_id, int> &elem : pairs ) {
                 ret.push_back( elem.first );
             }
             return ret;
@@ -346,7 +346,7 @@ const std::unordered_map<std::string, cbm_reserve_rule> cbm_reserve_strs = { {
     }
 };
 
-enum class ally_rule {
+enum class ally_rule : int {
     DEFAULT = 0,
     use_guns = 1,
     use_grenades = 2,
@@ -1147,7 +1147,7 @@ class npc : public player
         // Same as if the player pressed '.'
         void move_pause();
 
-        void set_movement_mode( character_movemode mode ) override;
+        void set_movement_mode( const move_mode_id &mode ) override;
 
         const pathfinding_settings &get_pathfinding_settings() const override;
         const pathfinding_settings &get_pathfinding_settings( bool no_bashing ) const;
@@ -1162,7 +1162,8 @@ class npc : public player
         // Move to, or grab, our targeted item
         void pick_up_item();
         // Drop wgt and vol, including all items with less value than min_val
-        void drop_items( units::mass drop_weight, units::volume drop_volume, int min_val = 0 );
+        void drop_items( const units::mass &drop_weight, const units::volume &drop_volume,
+                         int min_val = 0 );
         /** Picks up items and returns a list of them. */
         std::list<item> pick_up_item_map( const tripoint &where );
         std::list<item> pick_up_item_vehicle( vehicle &veh, int part_index );
@@ -1416,7 +1417,7 @@ class npc_template
         npc guy;
         translation name_unique;
         translation name_suffix;
-        enum class gender {
+        enum class gender : int {
             random,
             male,
             female

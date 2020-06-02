@@ -61,9 +61,7 @@ struct islot_armor;
 struct use_function;
 
 enum art_effect_passive : int;
-enum phase_id : int;
 enum body_part : int;
-enum m_size : int;
 enum class side : int;
 class body_part_set;
 class map;
@@ -395,6 +393,8 @@ class item : public visitable<item>
                           int batch = 1 ) const;
         /* type specific helper functions for info() that should probably be in itype() */
         void basic_info( std::vector<iteminfo> &info, const iteminfo_query *parts, int batch,
+                         bool debug ) const;
+        void debug_info( std::vector<iteminfo> &info, const iteminfo_query *parts, int batch,
                          bool debug ) const;
         void med_info( const item *med_item, std::vector<iteminfo> &info, const iteminfo_query *parts,
                        int batch, bool debug ) const;
@@ -796,7 +796,7 @@ class item : public visitable<item>
          * @return true if the item is fully rotten and is ready to be removed
          */
         bool process_temperature_rot( float insulation, const tripoint &pos, player *carrier,
-                                      temperature_flag flag = temperature_flag::TEMP_NORMAL, float spoil_modifier = 1.0f );
+                                      temperature_flag flag = temperature_flag::NORMAL, float spoil_modifier = 1.0f );
 
         /** Set the item to HOT */
         void heat_up();
@@ -1104,7 +1104,7 @@ class item : public visitable<item>
          * Returns false if the item is not destroyed.
          */
         bool process( player *carrier, const tripoint &pos, bool activate, float insulation = 1,
-                      temperature_flag flag = temperature_flag::TEMP_NORMAL, float spoil_multiplier_parent = 1.0f );
+                      temperature_flag flag = temperature_flag::NORMAL, float spoil_multiplier_parent = 1.0f );
 
         /**
          * Gets the point (vehicle tile) the cable is connected to.
@@ -1497,7 +1497,7 @@ class item : public visitable<item>
         /**
          * Whether this item (when worn) covers the given body part.
          */
-        bool covers( body_part bp ) const;
+        bool covers( const bodypart_id &bp ) const;
         /**
          * Bitset of all covered body parts.
          *
@@ -1560,7 +1560,7 @@ class item : public visitable<item>
          */
         int get_coverage() const;
 
-        enum class encumber_flags {
+        enum class encumber_flags : int {
             none = 0,
             assume_full = 1,
         };
@@ -2102,7 +2102,7 @@ class item : public visitable<item>
                                   const std::function<bool( const item & )> &filter = return_true<item> );
         const use_function *get_use_internal( const std::string &use_name ) const;
         bool process_internal( player *carrier, const tripoint &pos, bool activate, float insulation = 1,
-                               temperature_flag flag = temperature_flag::TEMP_NORMAL, float spoil_modifier = 1.0f );
+                               temperature_flag flag = temperature_flag::NORMAL, float spoil_modifier = 1.0f );
         /**
          * Calculate the thermal energy and temperature change of the item
          * @param temp Temperature of surroundings
@@ -2123,7 +2123,7 @@ class item : public visitable<item>
         bool is_reloadable_helper( const itype_id &ammo, bool now ) const;
 
     public:
-        enum class sizing {
+        enum class sizing : int {
             human_sized_human_char = 0,
             big_sized_human_char,
             small_sized_human_char,
